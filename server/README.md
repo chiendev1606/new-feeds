@@ -25,6 +25,12 @@ Mỗi request đều được in ra terminal, gồm method, URL, status, thời 
 | GET/POST | `/__mock/config` | Xem hoặc chỉnh `latencyMs`, `failRate`, `autoNewPostsEverySec` |
 | POST | `/__mock/insert-new-posts?n=3` | Chèn bài mới lên đầu feed |
 | POST | `/__mock/reset` | Đưa dữ liệu về trạng thái seed |
+| POST | `/api/telemetry` (JSON hoặc text/plain từ `sendBeacon`) | Nhận lô 1–200 sự kiện (impression, dwell, web-vital), trả 204, lưu bảng `telemetry_events` |
+| GET | `/api/telemetry/summary` | Top bài theo lượt hiển thị và p75 của từng web vital |
+| GET | `/api/session/me` | `{ viewerId }`, dùng để tách dữ liệu lưu cục bộ theo tài khoản |
+| POST | `/api/session/refresh` | Làm mới session đã hết hạn |
+| POST | `/__mock/expire-session` | Session hiện tại hết hạn, `/api` trả 401 `SESSION_EXPIRED` |
+| POST | `/__mock/delete-post/:id` | Giả lập tác giả xoá bài; thao tác trên bài đó trả 404 |
 
 ## Thử bằng curl
 

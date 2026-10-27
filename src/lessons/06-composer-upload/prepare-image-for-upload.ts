@@ -14,6 +14,8 @@ export interface PreparedImage {
   wasResized: boolean;
 }
 
+// 📖 Bài học lesson-06 §1 – thu nhỏ và bỏ EXIF bằng canvas trước khi upload (docs/lessons/lesson-06.md)
+// #region learn:prepare-image-for-upload
 export function computeScaledSize(width: number, height: number, maxDimension = MAX_UPLOAD_DIMENSION) {
   const scale = Math.min(1, maxDimension / Math.max(width, height));
   return { width: Math.round(width * scale), height: Math.round(height * scale), scale };
@@ -43,3 +45,4 @@ export async function prepareImageForUpload(file: File): Promise<PreparedImage> 
   );
   return { blob, width, height, wasResized: scale < 1 };
 }
+// #endregion learn:prepare-image-for-upload

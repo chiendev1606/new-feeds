@@ -21,6 +21,8 @@ const LOCALES = [
   { value: 'ar-EG', label: 'العربية (RTL)' },
 ] as const;
 
+// 📖 Bài học lesson-07 §1 – role=feed, aria-busy và aria-setsize khi chưa biết tổng (docs/lessons/lesson-07.md)
+// #region learn:accessible-feed-container
 export function AccessibleFeed({ locale }: { locale: string }) {
   const state = useFeedState();
   const now = useNow();
@@ -40,6 +42,7 @@ export function AccessibleFeed({ locale }: { locale: string }) {
     </>
   );
 }
+// #endregion learn:accessible-feed-container
 
 const DEVTOOLS_CHECKLIST = [
   'Network → lọc "media": chỉ ảnh gần màn hình được tải; cột Size cho thấy w=320/640/960 tuỳ màn hình (srcset).',
@@ -52,8 +55,11 @@ const DEVTOOLS_CHECKLIST = [
 ];
 
 export default function Lesson07PerfA11yImages() {
+  // 📖 Bài học lesson-07 §4 – locale quyết định hướng chữ (docs/lessons/lesson-07.md)
+  // #region learn:locale-state-and-dir
   const [locale, setLocale] = useState<string>('vi-VN');
   const dir = locale.startsWith('ar') ? 'rtl' : 'ltr';
+  // #endregion learn:locale-state-and-dir
 
   return (
     <ReactionFeedStoreProvider>
@@ -99,9 +105,12 @@ export default function Lesson07PerfA11yImages() {
           </>
         }
       >
+        {/* 📖 Bài học lesson-07 §4 – lang và dir bao quanh feed (docs/lessons/lesson-07.md) */}
+        {/* #region learn:locale-dir-wrapper */}
         <div lang={locale} dir={dir}>
           <AccessibleFeed locale={locale} />
         </div>
+        {/* #endregion learn:locale-dir-wrapper */}
       </LessonLayout>
     </ReactionFeedStoreProvider>
   );

@@ -17,6 +17,8 @@
  */
 import type { Media, NormalizedEntities, NormalizedFeedResponse, Post, User } from '../../shared/types/feed-entities';
 
+// 📖 Bài học lesson-03 §1 – hình dạng state chuẩn hoá (docs/lessons/lesson-03.md)
+// #region learn:store-state-shape
 export interface FeedListState {
   postIds: string[];
   olderCursor: string | null;
@@ -40,7 +42,10 @@ export const INITIAL_FEED_STATE: FeedState = {
   mediaById: {},
   feed: { postIds: [], olderCursor: null, newerCursor: null, hasOlder: true, hasNewer: false, generation: 0, lastFetchedAt: null },
 };
+// #endregion learn:store-state-shape
 
+// 📖 Bài học lesson-03 §3 – các action của store (docs/lessons/lesson-03.md)
+// #region learn:store-action-types
 export type FeedStoreAction =
   /** initial: thay toàn bộ list; older: nối vào cuối; newer: chèn lên đầu. */
   | { type: 'feedPageReceived'; direction: 'initial' | 'older' | 'newer'; response: NormalizedFeedResponse; receivedAt: number }
@@ -51,7 +56,10 @@ export type FeedStoreAction =
   /** Thay post tạm (id tạm) bằng post thật từ server. */
   | { type: 'postReplaced'; previousId: string; post: Post }
   | { type: 'postRemoved'; postId: string };
+// #endregion learn:store-action-types
 
+// 📖 Bài học lesson-03 §2 – merge entity và khử id trùng (docs/lessons/lesson-03.md)
+// #region learn:store-merge-helpers
 /** Bản sao object không có khoá `key`. */
 export function withoutKey<T>(record: Record<string, T>, key: string): Record<string, T> {
   const { [key]: _removed, ...rest } = record;
@@ -71,9 +79,12 @@ function mergeEntities(state: FeedState, entities: Partial<NormalizedEntities>):
     mediaById: entities.media ? { ...state.mediaById, ...entities.media } : state.mediaById,
   };
 }
+// #endregion learn:store-merge-helpers
 
 export function feedStoreReducer(state: FeedState, action: FeedStoreAction): FeedState {
   switch (action.type) {
+    // 📖 Bài học lesson-03 §2 – nhận một trang feed (docs/lessons/lesson-03.md)
+    // #region learn:store-feed-page-received
     case 'feedPageReceived': {
       const { response, direction } = action;
       const merged = mergeEntities(state, response);
@@ -110,7 +121,10 @@ export function feedStoreReducer(state: FeedState, action: FeedStoreAction): Fee
         },
       };
     }
+    // #endregion learn:store-feed-page-received
 
+    // 📖 Bài học lesson-03 §3 – cập nhật một chỗ, mọi nơi đổi theo (docs/lessons/lesson-03.md)
+    // #region learn:store-entity-actions
     case 'entitiesMerged':
       return mergeEntities(state, action.entities);
 
@@ -131,5 +145,6 @@ export function feedStoreReducer(state: FeedState, action: FeedStoreAction): Fee
 
     case 'postRemoved':
       return { ...state, postsById: withoutKey(state.postsById, action.postId), feed: { ...state.feed, postIds: state.feed.postIds.filter((id) => id !== action.postId) } };
+    // #endregion learn:store-entity-actions
   }
 }

@@ -19,6 +19,8 @@ export const NEW_POSTS_POLL_INTERVAL_MS = 10_000;
 export function NewPostsBanner() {
   const state = useFeedState();
   const dispatch = useFeedDispatch();
+  // 📖 Bài học lesson-04 §5 – polling bài mới, không chồng request (docs/lessons/lesson-04.md)
+  // #region learn:new-posts-polling-effect
   const [pending, setPending] = useState<NormalizedFeedResponse | null>(null);
   const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null);
   const newerCursorRef = useRef(state.feed.newerCursor);
@@ -50,12 +52,15 @@ export function NewPostsBanner() {
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
+  // #endregion learn:new-posts-polling-effect
 
   const count = pending?.feed.postIds.length ?? 0;
 
   return (
     <>
       <div aria-live="polite" className="new-posts-banner-region">
+        {/* 📖 Bài học lesson-04 §5 – người dùng bấm thì mới chèn bài mới (docs/lessons/lesson-04.md) */}
+        {/* #region learn:new-posts-apply-on-click */}
         {pending && (
           <button
             type="button"
@@ -70,6 +75,7 @@ export function NewPostsBanner() {
             {pending.feed.hasNewer ? '+' : ''} bài mới
           </button>
         )}
+        {/* #endregion learn:new-posts-apply-on-click */}
       </div>
       <p className="muted">
         Kiểm tra bài mới mỗi {NEW_POSTS_POLL_INTERVAL_MS / 1000}s{lastCheckedAt ? ` · lần cuối ${lastCheckedAt.toLocaleTimeString()}` : ''}

@@ -14,6 +14,8 @@
  *   │ bottomSpacer │  = tổng chiều cao các item [endIndex, n)
  *   └──────────────┘
  */
+// 📖 Bài học lesson-08 §1 – đầu vào và đầu ra của hàm tính range (docs/lessons/lesson-08.md)
+// #region learn:visible-range-types
 export interface VisibleRangeInput {
   /** heights[i] = chiều cao đã đo; undefined = chưa đo → dùng estimatedHeight. */
   heights: ReadonlyArray<number | undefined>;
@@ -34,7 +36,10 @@ export interface VisibleRange {
   bottomSpacer: number;
   totalHeight: number;
 }
+// #endregion learn:visible-range-types
 
+// 📖 Bài học lesson-08 §1 – tính item cần render và hai spacer (docs/lessons/lesson-08.md)
+// #region learn:compute-visible-range
 export function computeVisibleRange({ heights, estimatedHeight, scrollOffset, viewportHeight, overscanPx }: VisibleRangeInput): VisibleRange {
   const count = heights.length;
   const windowTop = scrollOffset - overscanPx;
@@ -72,3 +77,4 @@ export function computeVisibleRange({ heights, estimatedHeight, scrollOffset, vi
     totalHeight,
   };
 }
+// #endregion learn:compute-visible-range

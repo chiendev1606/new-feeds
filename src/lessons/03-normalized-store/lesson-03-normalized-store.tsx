@@ -12,12 +12,15 @@ import { PostCardBasic } from '../../shared/ui/post-card-basic';
 import { FeedStoreProvider, useFeedDispatch, useFeedState, usePostView } from './feed-store-context';
 import { toErrorMessage } from '../../shared/utils/to-error-message';
 
+// 📖 Bài học lesson-03 §4 – card tự chọn dữ liệu theo id (docs/lessons/lesson-03.md)
+// #region learn:connected-post-card
 /** Mỗi card tự "chọn" dữ liệu của mình từ store bằng id. */
 function ConnectedPostCard({ postId, highlightAuthorId }: { postId: string; highlightAuthorId: string | null }) {
   const { post, author, media } = usePostView(postId);
   if (!post) return null;
   return <PostCardBasic post={post} author={author} media={media} highlight={post.authorId === highlightAuthorId} />;
 }
+// #endregion learn:connected-post-card
 
 function StoreInspector() {
   const state = useFeedState();
@@ -41,6 +44,8 @@ function StoreInspector() {
   );
 }
 
+// 📖 Bài học lesson-03 §3 – đổi tên một user, mọi bài đổi theo (docs/lessons/lesson-03.md)
+// #region learn:rename-user-demo
 function RenameUserDemo({ onRenamed }: { onRenamed: (userId: string) => void }) {
   const state = useFeedState();
   const dispatch = useFeedDispatch();
@@ -73,6 +78,7 @@ function RenameUserDemo({ onRenamed }: { onRenamed: (userId: string) => void }) 
     </div>
   );
 }
+// #endregion learn:rename-user-demo
 
 function NormalizedFeed() {
   const state = useFeedState();
@@ -81,6 +87,8 @@ function NormalizedFeed() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 📖 Bài học lesson-03 §2 – tải trang rồi dispatch vào store (docs/lessons/lesson-03.md)
+  // #region learn:load-page-into-store
   const loadPage = async (direction: 'initial' | 'older') => {
     setLoading(true);
     setError(null);
@@ -93,6 +101,7 @@ function NormalizedFeed() {
       setLoading(false);
     }
   };
+  // #endregion learn:load-page-into-store
 
   useEffect(() => {
     // Chỉ tải trang đầu một lần khi mount.

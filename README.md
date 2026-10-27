@@ -1,8 +1,8 @@
-# News Feed — System Design qua 8 lesson
+# News Feed — System Design qua 12 lesson
 
 Project học **frontend system design** dựa trên bài [News Feed (Facebook) – GreatFrontEnd](https://www.greatfrontend.com/questions/system-design/news-feed-facebook?format=system-design).
 
-Project gồm 8 lesson, lesson sau xây thêm một khái niệm lên lesson trước. Đi kèm là một backend Express thật, có thể chỉnh độ trễ và tỉ lệ lỗi để quan sát hành vi mạng.
+Project gồm 12 lesson, lesson sau xây thêm một khái niệm lên lesson trước. Đi kèm là một backend Express thật, có thể chỉnh độ trễ và tỉ lệ lỗi để quan sát hành vi mạng.
 
 ## Chạy
 
@@ -47,18 +47,30 @@ Cách khác: `docker compose down -v` xoá luôn volume. Lưu ý: file backup c�
 
 ## Lộ trình học
 
-| # | Lesson | RADIO | Khái niệm |
-|---|---|---|---|
-| 01 | Feed cơ bản | R + A | Các layer View / Store / Data access / Server, CSR |
-| 02 | Cursor vs offset | I | Vì sao offset bị trùng bài khi có bài mới; cursor mờ (opaque) |
-| 03 | Normalized store | D | `postsById` / `usersById` / `mediaById`, merge response theo id |
-| 04 | Infinite scroll | O | IntersectionObserver, prefetch, skeleton, banner "Có bài mới" |
-| 05 | Optimistic reaction | O | Cập nhật UI trước, rollback khi lỗi, xử lý response về sai thứ tự |
-| 06 | Composer & upload | I + O | Upload ảnh trước rồi mới tạo bài, idempotency key, chèn bài tạm |
-| 07 | Ảnh, a11y, i18n | O | srcset, giữ chỗ cho ảnh, entity ranges, Intl, `role="feed"` |
-| 08 | Virtualization | O | Windowing, đo chiều cao, so sánh với `content-visibility` |
+| # | Lesson | RADIO | Khái niệm | Bài học |
+|---|---|---|---|---|
+| 01 | Feed cơ bản | R + A | Các layer View / Store / Data access / Server, CSR | [lesson-01.md](docs/lessons/lesson-01.md) |
+| 02 | Cursor vs offset | I | Vì sao offset bị trùng bài khi có bài mới; cursor mờ (opaque) | [lesson-02.md](docs/lessons/lesson-02.md) |
+| 03 | Normalized store | D | `postsById` / `usersById` / `mediaById`, merge response theo id | [lesson-03.md](docs/lessons/lesson-03.md) |
+| 04 | Infinite scroll | O | IntersectionObserver, prefetch, skeleton, banner "Có bài mới" | [lesson-04.md](docs/lessons/lesson-04.md) |
+| 05 | Optimistic reaction | O | Cập nhật UI trước, rollback khi lỗi, xử lý response về sai thứ tự | [lesson-05.md](docs/lessons/lesson-05.md) |
+| 06 | Composer & upload | I + O | Upload ảnh trước rồi mới tạo bài, idempotency key, chèn bài tạm | [lesson-06.md](docs/lessons/lesson-06.md) |
+| 07 | Ảnh, a11y, i18n | O | srcset, giữ chỗ cho ảnh, entity ranges, Intl, `role="feed"` | [lesson-07.md](docs/lessons/lesson-07.md) |
+| 08 | Virtualization | O | Windowing, đo chiều cao, so sánh với `content-visibility` | [lesson-08.md](docs/lessons/lesson-08.md) |
+| 09 | Feed list nâng cao | O | Giữ vị trí scroll khi quay lại, feed cũ, BroadcastChannel, gộp request trùng, focus và Page Up/Down | [lesson-09.md](docs/lessons/lesson-09.md) |
+| 10 | Lazy-load code & JS tiers | O | Menu, hover card, renderer theo loại bài tải khi cần; composer sinh entity, chặn paste HTML | [lesson-10.md](docs/lessons/lesson-10.md) |
+| 11 | Đo lường & telemetry | O | LCP/CLS/INP so với budget, đếm lượt hiển thị, sendBeacon, `Intl.ListFormat` | [lesson-11.md](docs/lessons/lesson-11.md) |
+| 12 | Resilience & offline | O | Làm mới session khi gặp 401, xử lý 404, outbox trong IndexedDB, Service Worker | [lesson-12.md](docs/lessons/lesson-12.md) |
 
 Hướng dẫn chi tiết, nối từng mục trong bài với từng file, kèm câu hỏi tự kiểm tra: **[docs/learning-guide.md](docs/learning-guide.md)**.
+
+### Cách học
+
+Mỗi lesson trong app có hai tab: **🧪 Demo** để thao tác và **📖 Bài học** để đọc giải thích chi tiết. Tab Bài học đọc từ `docs/lessons/lesson-XX.md`. Mỗi khái niệm đi theo cùng một khung: *Trong bài viết → Code thật → Vì sao làm vậy → Lỗi hay gặp → Tự thử → Câu hỏi phỏng vấn*. Phần "Code thật" được nhúng thẳng từ source qua marker `// #region learn:<id>`, nên luôn khớp với code đang chạy. Test `src/shared/learn/lesson-docs.test.ts` báo lỗi nếu bài học trỏ tới region không còn tồn tại.
+
+1. Đọc nền tảng dùng chung trước: **[docs/lessons/shared-foundations.md](docs/lessons/shared-foundations.md)** (kiến trúc, vòng đời request, http-client, hợp đồng API, repository/Drizzle, idempotency).
+2. Với mỗi lesson: chơi tab Demo, đọc tab Bài học, làm các bước "Tự thử", rồi trả lời "Câu hỏi phỏng vấn".
+3. Muốn thêm hoặc sửa bài học thì xem quy ước trong [docs/lessons/README.md](docs/lessons/README.md).
 
 ## Cấu trúc
 

@@ -27,6 +27,8 @@ const LOCALE = 'vi-VN';
 
 type RenderMode = 'virtualized' | 'content-visibility' | 'plain';
 
+// 📖 Bài học lesson-08 §4 – đếm article và node bằng MutationObserver (docs/lessons/lesson-08.md)
+// #region learn:use-dom-stats
 /** Đếm số <article> và tổng số node trong feed – cập nhật khi DOM đổi. */
 function useDomStats(container: React.RefObject<HTMLElement | null>) {
   const [stats, setStats] = useState({ articles: 0, nodes: 0 });
@@ -51,6 +53,7 @@ function useDomStats(container: React.RefObject<HTMLElement | null>) {
   }, [container]);
   return stats;
 }
+// #endregion learn:use-dom-stats
 
 function LoadManyButton({ loadMany, busy, hasOlder }: { loadMany: (pages: number) => Promise<void>; busy: boolean; hasOlder: boolean }) {
   return (
@@ -68,12 +71,15 @@ function Lesson08Content() {
   const stats = useDomStats(feedRef);
   // Đổi chế độ render làm sentinel đổi vị trí → observe lại.
   const { status, error, loadMany, retry, hasOlder, sentinelRef } = useFeedLoader({ observeKey: mode });
+  // 📖 Bài học lesson-08 §4 – aria-setsize khi chưa biết tổng (docs/lessons/lesson-08.md)
+  // #region learn:render-post-with-setsize
   const setSize = hasOlder ? -1 : state.feed.postIds.length;
 
   const renderPost = (postId: string, index: number) => (
     <FeedPostArticle postId={postId} posInSet={index + 1} setSize={setSize} locale={LOCALE} now={now} priority={index === 0} />
   );
   const sentinel = <div ref={sentinelRef} className="sentinel" aria-hidden="true" />;
+  // #endregion learn:render-post-with-setsize
 
   return (
     <LessonLayout
@@ -120,6 +126,8 @@ function Lesson08Content() {
         </div>
       }
     >
+      {/* 📖 Bài học lesson-08 §4 – ba chế độ render để so sánh (docs/lessons/lesson-08.md) */}
+      {/* #region learn:render-mode-switch */}
       <div ref={feedRef} role="feed" aria-label="Bảng tin" aria-busy={status !== 'idle' && status !== 'error'}>
         {mode === 'virtualized' ? (
           <VirtualizedFeedList itemIds={state.feed.postIds} renderItem={renderPost} footer={sentinel} />
@@ -134,6 +142,7 @@ function Lesson08Content() {
           </>
         )}
       </div>
+      {/* #endregion learn:render-mode-switch */}
     </LessonLayout>
   );
 }

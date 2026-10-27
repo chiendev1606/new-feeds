@@ -34,22 +34,35 @@ function ConnectedPostCard({ postId }: { postId: string }) {
   );
 }
 
+// 📖 Bài học lesson-06 §4 – dựng bài tạm có id temp- (docs/lessons/lesson-06.md)
+// #region learn:build-temp-post
 function buildTempPost(payload: ComposerSubmitPayload): Post {
   return {
     id: `${TEMP_ID_PREFIX}${payload.idempotencyKey}`,
     authorId: VIEWER_ID,
-    body: { text: payload.text, entities: [] },
+    body: { text: normalizeComposerText(payload.text), entities: [] },
     mediaIds: payload.mediaIds,
     engagementSummary: createEmptyEngagementSummary(),
     viewerReaction: null,
     createdAt: new Date().toISOString(),
   };
 }
+// #endregion learn:build-temp-post
+
+// 📖 Bài học lesson-06 §5 – chuẩn hoá NFC trước khi gửi (docs/lessons/lesson-06.md)
+// #region learn:normalize-nfc-client
+/**
+ * Chuẩn hoá NFC trước khi gửi: text dán từ tên file macOS, PDF, vài bộ gõ hay ở dạng NFD ("ệ" = e + 2 dấu rời).
+ * Server cũng tự chuẩn hoá khi không có entity, nhưng làm ở client giúp bài tạm khớp đúng với bài thật và là thói quen
+ * đúng khi sau này có entity (offset tính trên dạng NFC).
+ */
+const normalizeComposerText = (text: string) => text.normalize('NFC');
 
 /** Gửi payload của composer lên server – dùng cho cả lần đăng đầu và thí nghiệm gửi lại cùng key. */
 function submitComposerPayload(payload: ComposerSubmitPayload, onRetry?: RequestOptions['onRetry']) {
-  return createPost({ body: { text: payload.text, entities: [] }, mediaIds: payload.mediaIds, altTexts: payload.altTexts }, payload.idempotencyKey, onRetry);
+  return createPost({ body: { text: normalizeComposerText(payload.text), entities: [] }, mediaIds: payload.mediaIds, altTexts: payload.altTexts }, payload.idempotencyKey, onRetry);
 }
+// #endregion learn:normalize-nfc-client
 
 interface ReplayCheck {
   firstId: string;
@@ -63,6 +76,8 @@ function ComposerFeed({ onLog }: { onLog: (line: string) => void }) {
   const [lastSubmission, setLastSubmission] = useState<{ payload: ComposerSubmitPayload; postId: string } | null>(null);
   const [replay, setReplay] = useState<ReplayCheck | null>(null);
 
+  // 📖 Bài học lesson-06 §4 – chèn bài tạm rồi thay bằng bài thật hoặc gỡ (docs/lessons/lesson-06.md)
+  // #region learn:optimistic-insert-temp-post
   const handleSubmit = async (payload: ComposerSubmitPayload) => {
     const tempPost = buildTempPost(payload);
     dispatch({ type: 'postPrepended', post: tempPost });
@@ -82,7 +97,10 @@ function ComposerFeed({ onLog }: { onLog: (line: string) => void }) {
       throw error;
     }
   };
+  // #endregion learn:optimistic-insert-temp-post
 
+  // 📖 Bài học lesson-06 §3 – thí nghiệm gửi lại cùng key (docs/lessons/lesson-06.md)
+  // #region learn:replay-same-key
   const replayLastSubmission = async () => {
     if (!lastSubmission) return;
     const { payload } = lastSubmission;
@@ -92,6 +110,7 @@ function ComposerFeed({ onLog }: { onLog: (line: string) => void }) {
     setReplay({ firstId: lastSubmission.postId, replayId: response.post.id });
     onLog(`🔂 gửi lại cùng key → server trả ${response.post.id}`);
   };
+  // #endregion learn:replay-same-key
 
   return (
     <>

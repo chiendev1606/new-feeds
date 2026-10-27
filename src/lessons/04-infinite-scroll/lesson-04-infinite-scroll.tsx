@@ -19,8 +19,11 @@ function ConnectedPostCard({ postId }: { postId: string }) {
 /** Hiển thị rõ sentinel để thấy khi nào nó "chạm" vùng quan sát. */
 function InfiniteFeed({ showSentinel, rootMargin }: { showSentinel: boolean; rootMargin: string }) {
   const state = useFeedState();
+  // 📖 Bài học lesson-04 §2 – hook loader tự quản sentinel (docs/lessons/lesson-04.md)
+  // #region learn:infinite-feed-loader-wiring
   // useFeedLoader tự quản sentinel: chỉ bật khi rảnh + còn bài, observe lại mỗi khi số bài đổi.
   const { status, error, retryMessage, requestCount, retry, hasOlder, sentinelRef } = useFeedLoader({ rootMargin });
+  // #endregion learn:infinite-feed-loader-wiring
 
   return (
     <>
@@ -29,13 +32,18 @@ function InfiniteFeed({ showSentinel, rootMargin }: { showSentinel: boolean; roo
         Đã tải {state.feed.postIds.length} bài qua {requestCount} request · trạng thái: <code>{status}</code>
       </p>
       <div className="feed">
+        {/* 📖 Bài học lesson-04 §4 – skeleton theo trạng thái tải (docs/lessons/lesson-04.md) */}
+        {/* #region learn:infinite-feed-skeleton-states */}
         {status === 'loading-initial' && <PostSkeletonList count={3} />}
         {state.feed.postIds.map((postId) => (
           <ConnectedPostCard key={postId} postId={postId} />
         ))}
         {status === 'loading-older' && <PostSkeletonList count={2} />}
+        {/* #endregion learn:infinite-feed-skeleton-states */}
       </div>
 
+      {/* 📖 Bài học lesson-04 §4 – lỗi inline và nút thử lại (docs/lessons/lesson-04.md) */}
+      {/* #region learn:infinite-feed-error-retry */}
       {retryMessage && <p className="muted">{retryMessage}</p>}
       {status === 'error' && (
         <div className="panel" role="alert">
@@ -46,10 +54,14 @@ function InfiniteFeed({ showSentinel, rootMargin }: { showSentinel: boolean; roo
         </div>
       )}
       {!hasOlder && <p className="muted">Bạn đã xem hết bài viết.</p>}
+      {/* #endregion learn:infinite-feed-error-retry */}
 
+      {/* 📖 Bài học lesson-04 §1 – phần tử sentinel cuối danh sách (docs/lessons/lesson-04.md) */}
+      {/* #region learn:infinite-feed-sentinel-element */}
       <div ref={sentinelRef} className={showSentinel ? 'sentinel sentinel--visible' : 'sentinel'} aria-hidden="true">
         {showSentinel && `sentinel (rootMargin: ${rootMargin})`}
       </div>
+      {/* #endregion learn:infinite-feed-sentinel-element */}
     </>
   );
 }
@@ -78,6 +90,8 @@ export default function Lesson04InfiniteScroll() {
             <label style={{ display: 'block' }}>
               <input type="checkbox" checked={showSentinel} onChange={(event) => setShowSentinel(event.target.checked)} /> Hiện sentinel
             </label>
+            {/* 📖 Bài học lesson-04 §1 – đổi rootMargin để so sánh (docs/lessons/lesson-04.md) */}
+            {/* #region learn:root-margin-switch */}
             <label style={{ display: 'block', marginBlockStart: '0.5rem' }}>
               rootMargin:{' '}
               <select value={rootMargin} onChange={(event) => setRootMargin(event.target.value)}>
@@ -85,6 +99,7 @@ export default function Lesson04InfiniteScroll() {
                 <option value="0px">0px (chỉ khi chạm đáy)</option>
               </select>
             </label>
+            {/* #endregion learn:root-margin-switch */}
           </div>
         }
       >

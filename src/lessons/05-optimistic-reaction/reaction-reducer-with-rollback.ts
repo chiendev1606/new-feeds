@@ -36,6 +36,8 @@ export type ReactionAction =
   | { type: 'reactionConfirmed'; postId: string; requestSeq: number; response: ReactionResponse }
   | { type: 'reactionRolledBack'; postId: string; requestSeq: number };
 
+// 📖 Bài học lesson-05 §1 – tính lại số đếm khi đổi reaction (docs/lessons/lesson-05.md)
+// #region learn:summary-delta
 /** Tính lại số đếm khi viewer đổi từ `previous` sang `next` (null = không react). */
 export function applyReactionChangeToSummary(summary: EngagementSummary, previous: ReactionType | null, next: ReactionType | null): EngagementSummary {
   if (previous === next) return summary;
@@ -51,6 +53,7 @@ export function applyReactionChangeToSummary(summary: EngagementSummary, previou
   }
   return { ...summary, reactionCounts, totalReactions: Math.max(0, totalReactions) };
 }
+// #endregion learn:summary-delta
 
 function patchPost(state: ReactionAwareFeedState, postId: string, snapshot: ConfirmedReactionSnapshot): ReactionAwareFeedState {
   const post = state.postsById[postId];
@@ -65,6 +68,8 @@ function reactionReducer(state: ReactionAwareFeedState, action: ReactionAction):
 
   switch (action.type) {
     case 'reactionOptimisticApplied': {
+      // 📖 Bài học lesson-05 §1 – đổi UI ngay và chụp mốc rollback (docs/lessons/lesson-05.md)
+      // #region learn:optimistic-applied
       // Lần bấm đầu tiên (không có request nào đang chờ) → chụp lại trạng thái hiện tại làm mốc rollback.
       const confirmed = record?.confirmed ?? { viewerReaction: post.viewerReaction, engagementSummary: post.engagementSummary };
       const optimistic: ConfirmedReactionSnapshot = {
@@ -75,9 +80,12 @@ function reactionReducer(state: ReactionAwareFeedState, action: ReactionAction):
         ...patchPost(state, action.postId, optimistic),
         pendingReactions: { ...state.pendingReactions, [action.postId]: { latestSeq: action.requestSeq, confirmed } },
       };
+      // #endregion learn:optimistic-applied
     }
 
     case 'reactionConfirmed': {
+      // 📖 Bài học lesson-05 §2 – chỉ response của lần bấm mới nhất được đổi UI (docs/lessons/lesson-05.md)
+      // #region learn:confirmed-seq-guard
       const serverTruth: ConfirmedReactionSnapshot = {
         viewerReaction: action.response.viewerReaction,
         engagementSummary: action.response.engagementSummary,
@@ -88,11 +96,15 @@ function reactionReducer(state: ReactionAwareFeedState, action: ReactionAction):
         return { ...state, pendingReactions: { ...state.pendingReactions, [action.postId]: { ...record, confirmed: serverTruth } } };
       }
       return { ...patchPost(state, action.postId, serverTruth), pendingReactions: withoutKey(state.pendingReactions, action.postId) };
+      // #endregion learn:confirmed-seq-guard
     }
 
     case 'reactionRolledBack': {
+      // 📖 Bài học lesson-05 §1 – rollback về snapshot đã xác nhận (docs/lessons/lesson-05.md)
+      // #region learn:rolled-back-latest-only
       if (!record || action.requestSeq !== record.latestSeq) return state; // lỗi của request cũ: request mới hơn sẽ quyết định
       return { ...patchPost(state, action.postId, record.confirmed), pendingReactions: withoutKey(state.pendingReactions, action.postId) };
+      // #endregion learn:rolled-back-latest-only
     }
   }
 }

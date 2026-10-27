@@ -10,6 +10,8 @@ import { createContext, useContext, useReducer, type Dispatch, type ReactNode, t
 import type { FeedStoreAction, FeedState } from './feed-store-reducer';
 import { feedStoreReducer, INITIAL_FEED_STATE } from './feed-store-reducer';
 
+// 📖 Bài học lesson-03 §4 – Provider bọc reducer (docs/lessons/lesson-03.md)
+// #region learn:store-provider
 interface FeedStoreContextValue {
   state: FeedState;
   dispatch: Dispatch<{ type: string }>;
@@ -38,6 +40,7 @@ export function FeedStoreProvider<S extends FeedState = FeedState, A extends { t
   );
   return <FeedStoreContext.Provider value={{ state, dispatch: dispatch as Dispatch<{ type: string }> }}>{children}</FeedStoreContext.Provider>;
 }
+// #endregion learn:store-provider
 
 function useFeedStoreContext() {
   const value = useContext(FeedStoreContext);
@@ -45,6 +48,8 @@ function useFeedStoreContext() {
   return value;
 }
 
+// 📖 Bài học lesson-03 §4 – hook selector đọc theo id (docs/lessons/lesson-03.md)
+// #region learn:store-selector-hooks
 /** Đọc toàn bộ state – kiểu S cho lesson có state mở rộng. */
 export function useFeedState<S extends FeedState = FeedState>() {
   return useFeedStoreContext().state as S;
@@ -71,3 +76,4 @@ export function usePostView(postId: string) {
   const media = usePostMedia(post?.mediaIds ?? []);
   return { post, author, media };
 }
+// #endregion learn:store-selector-hooks

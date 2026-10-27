@@ -29,6 +29,8 @@ export function useMeasuredItemHeights(onShiftAboveViewport: (deltaPx: number) =
 
   // Observer tạo trong effect (không trong render) và quan sát lại các phần tử đang mount.
   useEffect(() => {
+    // 📖 Bài học lesson-08 §3 – đo chiều cao, bỏ qua phần tử đã gỡ, bù scroll (docs/lessons/lesson-08.md)
+    // #region learn:resize-observer-measure
     const observer = new ResizeObserver((entries) => {
       let changed = false;
       for (const entry of entries) {
@@ -50,6 +52,7 @@ export function useMeasuredItemHeights(onShiftAboveViewport: (deltaPx: number) =
       }
       if (changed) setVersion((value) => value + 1);
     });
+    // #endregion learn:resize-observer-measure
     observerRef.current = observer;
     elementByIdRef.current.forEach((element) => observer.observe(element));
     return () => {
@@ -58,6 +61,8 @@ export function useMeasuredItemHeights(onShiftAboveViewport: (deltaPx: number) =
     };
   }, []);
 
+  // 📖 Bài học lesson-08 §3 – cache callback ref theo id (docs/lessons/lesson-08.md)
+  // #region learn:measure-ref-cache
   /** Gắn vào item: <div ref={measureRef(postId)}>. Callback được cache theo id → React không detach/attach mỗi lần render. */
   const measureRef = useCallback((id: string): RefCallback => {
     let callback = refCallbacksRef.current.get(id);
@@ -78,6 +83,7 @@ export function useMeasuredItemHeights(onShiftAboveViewport: (deltaPx: number) =
     }
     return callback;
   }, []);
+  // #endregion learn:measure-ref-cache
 
   const getHeight = useCallback((id: string) => heightsRef.current.get(id), []);
 

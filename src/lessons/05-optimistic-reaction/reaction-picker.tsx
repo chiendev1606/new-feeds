@@ -7,7 +7,9 @@
  *   - Escape đóng bảng chọn và trả focus về nút.
  *   - Vùng bấm ≥ 32px (WCAG 2.2 AA tối thiểu 24px).
  */
-import { useId, useRef, useState } from 'react';
+import { Suspense, useId, useRef, useState } from 'react';
+import { ChunkErrorBoundary } from '../../shared/lazy/chunk-error-boundary';
+import { lazyWithPreload } from '../../shared/lazy/lazy-with-preload';
 import type { EngagementSummary, ReactionType } from '../../shared/types/feed-entities';
 import { REACTION_TYPES } from '../../shared/types/feed-entities';
 
@@ -19,6 +21,30 @@ export const REACTION_META: Record<ReactionType, { emoji: string; label: string 
   sad: { emoji: '😢', label: 'Buồn' },
   angry: { emoji: '😡', label: 'Phẫn nộ' },
 };
+
+/**
+ * Bảng 6 cảm xúc là chunk riêng (reaction-menu): chỉ tải khi sắp dùng tới.
+ *
+ * Menu mở ngay khi chuột vào CẢ THANH reaction (onMouseEnter của .reaction-bar), không phải khi vào nút ▾. Vì vậy
+ * "sắp dùng" bắt đầu từ lúc con trỏ chạm thanh: ta preload ở onPointerEnter của THANH (pointerenter bắn trước mouseenter,
+ * nên chunk bắt đầu tải trước khi menu kịp render). Nếu preload ở ▾ thì quá muộn – menu đã mở và React đã tự gọi import().
+ * Preload CHỈ rút ngắn khoảng chờ chứ không xoá nó: lần hover đầu tiên mà chunk chưa về vẫn thấy khung giữ chỗ.
+ * Muốn menu không bao giờ khựng thì prefetch lúc rảnh (lesson 10 có công tắc). Bàn phím: focus vào ▾ cũng preload.
+ */
+// 📖 Bài học lesson-05 §4 – bảng 6 cảm xúc là chunk riêng (docs/lessons/lesson-05.md)
+// #region learn:lazy-reaction-menu
+const LazyReactionMenu = lazyWithPreload(() => import('./reaction-menu'));
+export const preloadReactionMenu = () => LazyReactionMenu.preload();
+// #endregion learn:lazy-reaction-menu
+
+/** Khung giữ chỗ cùng kích thước menu thật (6 nút 40px + gap + padding) → mở menu không làm layout nhảy. */
+// 📖 Bài học lesson-05 §4 – khung giữ chỗ cùng id với menu thật (docs/lessons/lesson-05.md)
+// #region learn:reaction-menu-placeholder
+function ReactionMenuPlaceholder({ id }: { id: string }) {
+  // Mang cùng id với menu thật để aria-controls của nút ▾ không bao giờ trỏ tới phần tử chưa tồn tại.
+  return <div id={id} className="reaction-menu" aria-hidden="true" data-testid="reaction-menu-placeholder" style={{ inlineSize: 6 * 40 + 5 * 4 + 8 + 2, blockSize: 40 + 8 + 2 }} />;
+}
+// #endregion learn:reaction-menu-placeholder
 
 export interface ReactionPickerProps {
   viewerReaction: ReactionType | null;
@@ -46,6 +72,7 @@ export function ReactionPicker({ viewerReaction, summary, isPending, onReact, fo
   return (
     <div
       className="reaction-bar"
+      onPointerEnter={preloadReactionMenu}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
       onKeyDown={(event) => {
@@ -63,6 +90,8 @@ export function ReactionPicker({ viewerReaction, summary, isPending, onReact, fo
       </span>
 
       <div className="reaction-bar__actions">
+        {/* 📖 Bài học lesson-05 §4 – button thật, aria-pressed, aria-expanded (docs/lessons/lesson-05.md) */}
+        {/* #region learn:reaction-buttons-aria */}
         <button
           type="button"
           aria-pressed={viewerReaction !== null}
@@ -76,28 +105,20 @@ export function ReactionPicker({ viewerReaction, summary, isPending, onReact, fo
           type="button"
           className="reaction-button"
           aria-expanded={open}
-          aria-controls={menuId}
+          aria-controls={open ? menuId : undefined}
           aria-label="Chọn cảm xúc khác"
+          onFocus={preloadReactionMenu}
           onClick={() => setOpen((value) => !value)}
         >
           ▾
         </button>
+        {/* #endregion learn:reaction-buttons-aria */}
         {open && (
-          <div id={menuId} role="group" aria-label="Cảm xúc" className="reaction-menu">
-            {REACTION_TYPES.map((type) => (
-              <button
-                key={type}
-                type="button"
-                className="reaction-menu__item"
-                aria-label={REACTION_META[type].label}
-                aria-pressed={viewerReaction === type}
-                title={REACTION_META[type].label}
-                onClick={() => choose(viewerReaction === type ? null : type)}
-              >
-                {REACTION_META[type].emoji}
-              </button>
-            ))}
-          </div>
+          <ChunkErrorBoundary name="reaction-menu">
+            <Suspense fallback={<ReactionMenuPlaceholder id={menuId} />}>
+              <LazyReactionMenu id={menuId} viewerReaction={viewerReaction} onChoose={choose} />
+            </Suspense>
+          </ChunkErrorBoundary>
         )}
       </div>
     </div>

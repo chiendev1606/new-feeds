@@ -49,6 +49,8 @@ export function Composer({ onSubmit, onMediaUploaded }: ComposerProps) {
   // Giải phóng blob URL khi rời trang (tránh rò bộ nhớ).
   useEffect(() => () => uploadsRef.current.forEach((item) => URL.revokeObjectURL(item.previewUrl)), []);
 
+  // 📖 Bài học lesson-06 §1 – upload ảnh ngay khi chọn, song song với việc gõ chữ (docs/lessons/lesson-06.md)
+  // #region learn:start-upload-flow
   const startUpload = async (file: File) => {
     const localId = crypto.randomUUID();
     const previewUrl = URL.createObjectURL(file);
@@ -70,7 +72,10 @@ export function Composer({ onSubmit, onMediaUploaded }: ComposerProps) {
       dispatch({ type: 'uploadFailed', localId, error: toErrorMessage(error) });
     }
   };
+  // #endregion learn:start-upload-flow
 
+  // 📖 Bài học lesson-06 §2 – sinh key lần đầu và dùng lại khi retry (docs/lessons/lesson-06.md)
+  // #region learn:submit-with-key
   const submit = async () => {
     if (!canSubmitDraft(state)) return;
     // Key mới chỉ được dùng nếu đây là lần gửi đầu; retry dùng lại key cũ (xem reducer).
@@ -89,6 +94,7 @@ export function Composer({ onSubmit, onMediaUploaded }: ComposerProps) {
       dispatch({ type: 'submitFailed', error: toErrorMessage(error) });
     }
   };
+  // #endregion learn:submit-with-key
 
   const remainingSlots = MAX_IMAGES_PER_POST - state.uploads.length - preparingCountRef.current;
 
@@ -154,6 +160,8 @@ export function Composer({ onSubmit, onMediaUploaded }: ComposerProps) {
       )}
 
       <div className="composer__actions">
+        {/* 📖 Bài học lesson-06 §1 – giới hạn số ảnh kể cả khi chọn nhanh nhiều lần (docs/lessons/lesson-06.md) */}
+        {/* #region learn:file-input-slot-limit */}
         <input
           ref={fileInputRef}
           type="file"
@@ -167,6 +175,7 @@ export function Composer({ onSubmit, onMediaUploaded }: ComposerProps) {
             event.target.value = '';
           }}
         />
+        {/* #endregion learn:file-input-slot-limit */}
         <button type="button" disabled={remainingSlots <= 0 || isSubmitting} onClick={() => fileInputRef.current?.click()}>
           🖼️ Thêm ảnh ({state.uploads.length}/{MAX_IMAGES_PER_POST})
         </button>

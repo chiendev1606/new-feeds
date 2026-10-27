@@ -29,6 +29,8 @@ interface ColumnState {
 
 const EMPTY_COLUMN: ColumnState = { postIds: [], posts: {}, users: {}, hasMore: true, loading: false };
 
+// 📖 Bài học lesson-02 §1 – nối trang mà không khử trùng (docs/lessons/lesson-02.md)
+// #region learn:offset-column-append-page
 /** Gộp trang mới vào cột. Cố ý KHÔNG khử trùng để thấy rõ vấn đề của offset. */
 function appendPage(column: ColumnState, page: Omit<ColumnState, 'hasMore' | 'loading'>, hasMore: boolean): ColumnState {
   return {
@@ -39,6 +41,7 @@ function appendPage(column: ColumnState, page: Omit<ColumnState, 'hasMore' | 'lo
     loading: false,
   };
 }
+// #endregion learn:offset-column-append-page
 
 function FeedColumn({ title, column, onLoadMore, description, busy }: { title: string; column: ColumnState; onLoadMore: () => void; description: string; busy: boolean }) {
   const duplicates = findDuplicatePostIds(column.postIds);
@@ -84,10 +87,15 @@ export default function Lesson02CursorPagination() {
   const busy = offsetColumn.loading || cursorColumn.loading;
   // Offset tiếp theo = số mục đã tải (mỗi trang nối thêm đúng số bài nhận về).
   const nextOffset = offsetColumn.postIds.length;
+  // 📖 Bài học lesson-02 §4 – cờ ref đồng bộ chặn bấm đúp (docs/lessons/lesson-02.md)
+  // #region learn:in-flight-ref-guard
   // `disabled` chỉ có hiệu lực SAU khi React render lại; hai click trong cùng một tick vẫn lọt qua
   // và đọc cùng offset/cursor cũ → cần thêm cờ đồng bộ bằng ref.
   const inFlightRef = useRef({ offset: false, cursor: false });
+  // #endregion learn:in-flight-ref-guard
 
+  // 📖 Bài học lesson-02 §1 – tải trang kế bằng offset (docs/lessons/lesson-02.md)
+  // #region learn:load-more-by-offset
   const loadMoreByOffset = async () => {
     if (inFlightRef.current.offset) return;
     inFlightRef.current.offset = true;
@@ -103,7 +111,10 @@ export default function Lesson02CursorPagination() {
       inFlightRef.current.offset = false;
     }
   };
+  // #endregion learn:load-more-by-offset
 
+  // 📖 Bài học lesson-02 §4 – tải trang tiếp bằng cursor và chặn bấm đúp (docs/lessons/lesson-02.md)
+  // #region learn:load-more-by-cursor
   const loadMoreByCursor = async () => {
     if (inFlightRef.current.cursor) return;
     inFlightRef.current.cursor = true;
@@ -120,6 +131,7 @@ export default function Lesson02CursorPagination() {
       inFlightRef.current.cursor = false;
     }
   };
+  // #endregion learn:load-more-by-cursor
 
   const loadBoth = () => {
     void loadMoreByOffset();

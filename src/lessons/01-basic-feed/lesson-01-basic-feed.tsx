@@ -26,6 +26,8 @@ import { PostCardBasic } from '../../shared/ui/post-card-basic';
 import { toErrorMessage } from '../../shared/utils/to-error-message';
 
 export default function Lesson01BasicFeed() {
+  // 📖 Bài học lesson-01 §2 – state, effect và AbortController (docs/lessons/lesson-01.md)
+  // #region learn:basic-feed-state-and-fetch
   // [STORE] state đơn giản nhất có thể.
   const [page, setPage] = useState<NormalizedFeedResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +44,7 @@ export default function Lesson01BasicFeed() {
       });
     return () => controller.abort();
   }, []);
+  // #endregion learn:basic-feed-state-and-fetch
 
   return (
     <LessonLayout
@@ -59,6 +62,8 @@ export default function Lesson01BasicFeed() {
       {/* [VIEW] */}
       {error && <p className="error-text">Lỗi: {error}</p>}
       {!page && !error && <p>Đang tải…</p>}
+      {/* 📖 Bài học lesson-01 §3 – render theo postIds và tra entity theo id (docs/lessons/lesson-01.md) */}
+      {/* #region learn:basic-feed-render-by-id */}
       {page && (
         <div className="feed">
           {page.feed.postIds.map((postId) => {
@@ -75,6 +80,7 @@ export default function Lesson01BasicFeed() {
           <p className="muted">Hết. Lesson này chưa có "tải thêm" – xem lesson 02 &amp; 04.</p>
         </div>
       )}
+      {/* #endregion learn:basic-feed-render-by-id */}
     </LessonLayout>
   );
 }
