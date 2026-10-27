@@ -1,0 +1,2 @@
+- [Headless browser verification](reference-headless-browser-verification.md) — CDP + cached chrome-headless-shell for behavioral UI checks; DOM-count smoke tests miss bugs
+- [No-git baseline recovery](reference-no-git-baseline-recovery.md) — old code from session jsonl, old DDL from backups/, scratch-DB probes, drizzle-kit drift check

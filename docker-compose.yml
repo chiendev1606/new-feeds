@@ -1,0 +1,36 @@
+# PostgreSQL cho backend + Adminer để xem dữ liệu bằng trình duyệt.
+#   npm run db:up      → khởi động (npm run dev tự gọi)
+#   Adminer: http://localhost:8080  (System: PostgreSQL, Server: postgres, User/Password: newsfeed, Database: newsfeed)
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: newsfeed-postgres
+    environment:
+      POSTGRES_USER: newsfeed
+      POSTGRES_PASSWORD: newsfeed
+      POSTGRES_DB: newsfeed
+    ports:
+      - '5432:5432'
+    volumes:
+      - newsfeed-pgdata:/var/lib/postgresql/data
+      # Chỉ chạy lần đầu khi volume còn trống: tạo thêm database cho integration test.
+      - ./server/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U newsfeed -d newsfeed']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  adminer:
+    image: adminer:4
+    container_name: newsfeed-adminer
+    ports:
+      - '8080:8080'
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  newsfeed-pgdata:
