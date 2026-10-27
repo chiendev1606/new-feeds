@@ -3,6 +3,8 @@
  * và chuỗi có số nhiều bằng Intl.PluralRules (tiếng Anh: 1 comment / 2 comments).
  * Formatter được cache theo locale: tạo Intl.* tốn kém, mà mỗi bài viết gọi vài lần mỗi lần render.
  */
+// 📖 Bài học lesson-07 – số đếm gọn bằng Intl.NumberFormat compact (docs/lessons/lesson-07.md)
+// #region learn:compact-count
 const compactFormatters = new Map<string, Intl.NumberFormat>();
 const pluralRules = new Map<string, Intl.PluralRules>();
 
@@ -14,7 +16,10 @@ export function formatCompactCount(value: number, locale: string) {
   }
   return formatter.format(value);
 }
+// #endregion learn:compact-count
 
+// 📖 Bài học lesson-07 – chọn chuỗi số nhiều theo Intl.PluralRules (docs/lessons/lesson-07.md)
+// #region learn:plural-rules-comment-count
 const COMMENT_MESSAGES: Record<string, Partial<Record<Intl.LDMLPluralRule, string>> & { other: string }> = {
   vi: { other: '{n} bình luận' },
   en: { one: '{n} comment', other: '{n} comments' },
@@ -32,3 +37,4 @@ export function formatCommentCount(value: number, locale: string) {
   }
   return (messages[rules.select(value)] ?? messages.other).replace('{n}', formatCompactCount(value, locale));
 }
+// #endregion learn:plural-rules-comment-count

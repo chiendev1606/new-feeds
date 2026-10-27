@@ -9,6 +9,8 @@ import * as schema from './database-schema.js';
 const DEFAULT_DATABASE_URL = 'postgres://newsfeed:newsfeed@localhost:5432/newsfeed';
 export const TEST_DATABASE_URL = 'postgres://newsfeed:newsfeed@localhost:5432/newsfeed_test';
 
+// 📖 Bài học shared-foundations §7 – kiểu QueryExecutor dùng chung cho db và transaction, casing snake_case (docs/lessons/shared-foundations.md)
+// #region learn:drizzle-setup
 export type DatabasePool = pg.Pool;
 export type Database = NodePgDatabase<typeof schema>;
 export type DatabaseTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -23,6 +25,7 @@ export function createDatabasePool(connectionString = process.env.DATABASE_URL ?
 export function createDatabase(pool: DatabasePool): Database {
   return drizzle({ client: pool, schema, casing: 'snake_case' });
 }
+// #endregion learn:drizzle-setup
 
 export async function assertDatabaseReachable(pool: DatabasePool) {
   try {

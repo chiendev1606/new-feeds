@@ -1,0 +1,17 @@
+/* LESSON 09 – style riêng, import từ component lesson (không đụng global.css). */
+.lesson09-feed time { cursor: pointer; text-decoration: underline dotted; }
+.lesson09-feed time:hover { color: var(--accent); }
+.lesson09-detail-link { display: inline-block; margin-block: -0.25rem 0.5rem; font-size: 0.85rem; }
+.lesson09-banner {
+  position: sticky; top: 0.5rem; z-index: 10; display: flex; gap: 0.75rem; align-items: center; justify-content: space-between;
+  background: var(--surface); border: 2px solid var(--accent); border-radius: var(--radius); padding: 0.5rem 1rem; margin-block-end: 0.75rem;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
+.lesson09-panel dl { display: grid; grid-template-columns: auto 1fr; gap: 0.15rem 0.75rem; margin: 0 0 0.5rem; font-size: 0.85rem; }
+.lesson09-panel dt { color: var(--muted); }
+.lesson09-panel dd { margin: 0; overflow-wrap: anywhere; }
+.lesson09-panel label { display: flex; gap: 0.5rem; align-items: center; font-size: 0.85rem; margin-block-end: 0.5rem; }
+.lesson09-panel input[type='number'] { width: 5rem; }
+.lesson09-sync-log { list-style: none; padding: 0; margin: 0; max-height: 14rem; overflow: auto; font-size: 0.78rem; display: grid; gap: 0.2rem; }
+.lesson09-sync-log li[data-kind='applied'] { color: var(--success); }
+.lesson09-sync-log li[data-kind='ignored-stale'], .lesson09-sync-log li[data-kind='skipped'], .lesson09-sync-log li[data-kind='ignored-invalid'] { color: var(--danger); }

@@ -11,6 +11,8 @@
 import type { ReactNode } from 'react';
 import type { PostBody, TextEntity, User } from '../types/feed-entities';
 
+// 📖 Bài học lesson-06 – chỉ cho phép http, https, mailto để chặn javascript: (docs/lessons/lesson-06.md)
+// #region learn:safe-href
 const SAFE_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
 
 export function toSafeHref(url: string): string | null {
@@ -21,7 +23,10 @@ export function toSafeHref(url: string): string | null {
     return null;
   }
 }
+// #endregion learn:safe-href
 
+// 📖 Bài học lesson-06 – cắt text theo entity ranges, entity sai thì bỏ qua (docs/lessons/lesson-06.md)
+// #region learn:split-text-by-entities
 export type BodySegment = { kind: 'text'; text: string } | { kind: 'entity'; text: string; entity: TextEntity };
 
 /** Cắt text thành các đoạn theo entity ranges. Entity sai (chồng lấn/vượt biên) bị bỏ qua, phần text vẫn hiện. */
@@ -37,7 +42,10 @@ export function splitTextByEntities(text: string, entities: readonly TextEntity[
   if (cursor < text.length) segments.push({ kind: 'text', text: text.slice(cursor) });
   return segments;
 }
+// #endregion learn:split-text-by-entities
 
+// 📖 Bài học lesson-06 – mỗi entity thành phần tử React, React tự escape (docs/lessons/lesson-06.md)
+// #region learn:render-entity
 function renderEntity(segment: Extract<BodySegment, { kind: 'entity' }>, usersById: Record<string, User>, key: number): ReactNode {
   const { entity, text } = segment;
   switch (entity.type) {
@@ -69,7 +77,10 @@ function renderEntity(segment: Extract<BodySegment, { kind: 'entity' }>, usersBy
       return <span key={key}>{text}</span>;
   }
 }
+// #endregion learn:render-entity
 
+// 📖 Bài học lesson-06 – ghép các đoạn thành nội dung bài mà không dùng innerHTML (docs/lessons/lesson-06.md)
+// #region learn:post-body-text
 export function PostBodyText({ body, usersById }: { body: PostBody; usersById: Record<string, User> }) {
   return (
     <>
@@ -79,3 +90,4 @@ export function PostBodyText({ body, usersById }: { body: PostBody; usersById: R
     </>
   );
 }
+// #endregion learn:post-body-text

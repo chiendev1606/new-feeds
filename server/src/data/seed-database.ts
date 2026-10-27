@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { sql } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import type { Database, DatabaseTransaction } from './database-pool.js';
-import { feedState, idempotencyKeys, media, posts, reactions, users } from './database-schema.js';
+import { feedState, follows, idempotencyKeys, media, posts, reactions, telemetryEvents, users } from './database-schema.js';
 import { postToRow } from './feed-repository.js';
 import { generateSeedData } from './seed-data-generator.js';
 
@@ -26,17 +26,28 @@ async function insertSeedRows(tx: DatabaseTransaction) {
   await tx.insert(posts).values(seed.posts.map(postToRow));
   await tx.insert(reactions).values(reactionRows);
   await tx.insert(feedState).values({ id: 1, generation: 1 });
-  return { users: seed.users.length, posts: seed.posts.length, media: seed.media.length, reactions: reactionRows.length };
+  // user-1 (người xem mặc định) theo dõi user-2..user-11; user-2..user-6 theo dõi lại → 5 người là "bạn bè".
+  const followRows = [
+    ...Array.from({ length: 10 }, (_, index) => ({ followerId: 'user-1', followeeId: `user-${index + 2}` })),
+    ...Array.from({ length: 5 }, (_, index) => ({ followerId: `user-${index + 2}`, followeeId: 'user-1' })),
+  ];
+  await tx.insert(follows).values(followRows);
+  return { users: seed.users.length, posts: seed.posts.length, media: seed.media.length, reactions: reactionRows.length, follows: followRows.length };
 }
 
+// 📖 Bài học shared-foundations §7 – TRUNCATE rồi seed lại trong một transaction (docs/lessons/shared-foundations.md)
+// #region learn:reset-and-seed
 /** Xoá sạch dữ liệu rồi seed lại. */
 export function resetDatabaseToSeed(db: Database) {
   return db.transaction(async (tx) => {
-    await tx.execute(sql`TRUNCATE ${reactions}, ${idempotencyKeys}, ${posts}, ${media}, ${users}, ${feedState}`);
+    await tx.execute(sql`TRUNCATE ${reactions}, ${follows}, ${telemetryEvents}, ${idempotencyKeys}, ${posts}, ${media}, ${users}, ${feedState}`);
     return insertSeedRows(tx);
   });
 }
+// #endregion learn:reset-and-seed
 
+// 📖 Bài học shared-foundations §7 – áp migration chưa chạy và phát hiện DB cũ không có lịch sử migration (docs/lessons/shared-foundations.md)
+// #region learn:run-migrations
 /**
  * Áp các migration chưa chạy. DB tạo bằng schema.sql cũ (trước khi dùng Drizzle) có sẵn bảng nhưng không có
  * bảng lịch sử migration → migrate() sẽ lỗi "already exists"; báo hướng dẫn rõ ràng thay vì để crash.
@@ -52,6 +63,7 @@ export async function runMigrations(db: Database) {
   }
   await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
 }
+// #endregion learn:run-migrations
 
 /** Trả về null nếu DB đã có dữ liệu (không đụng vào), ngược lại trả về số dòng vừa seed. */
 export async function ensureDatabaseReady(db: Database) {

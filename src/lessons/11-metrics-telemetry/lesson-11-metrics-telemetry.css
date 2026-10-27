@@ -1,0 +1,10 @@
+/* CSS riêng của lesson 11 – dùng biến màu của global.css, không sửa file global. */
+.tracked-post { border-inline-start: 4px solid transparent; border-radius: var(--radius); transition: border-color 0.2s; }
+.tracked-post[data-impressed="true"] { border-inline-start-color: var(--success); }
+.vitals-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.vitals-table th, .vitals-table td { text-align: start; padding: 0.2rem 0.4rem; }
+.vital-value { font-weight: 700; }
+.vital-value--good { color: var(--success); }
+.vital-value--needs-improvement { color: #b06000; }
+.vital-value--poor { color: var(--danger); }
+.batch-log { margin: 0; padding-inline-start: 1.25rem; font-size: 0.8rem; max-height: 14rem; overflow: auto; }

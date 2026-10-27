@@ -10,6 +10,8 @@ import type { FeedRepository } from '../data/feed-repository.js';
 import { buildNormalizedEntities, clampPageSize } from './feed-query-service.js';
 import { HttpError } from './http-error.js';
 
+// 📖 Bài học lesson-02 – endpoint offset để so sánh với cursor (docs/lessons/lesson-02.md)
+// #region learn:offset-feed-query
 export async function getFeedPageByOffset(repository: FeedRepository, viewerId: string, rawOffset: unknown, rawCount: unknown): Promise<OffsetFeedResponse> {
   const offset = Number(rawOffset ?? 0);
   if (!Number.isInteger(offset) || offset < 0) throw new HttpError(400, 'INVALID_OFFSET', 'offset phải là số nguyên ≥ 0');
@@ -22,3 +24,4 @@ export async function getFeedPageByOffset(repository: FeedRepository, viewerId: 
     ...(await buildNormalizedEntities(repository, posts, viewerId)),
   };
 }
+// #endregion learn:offset-feed-query

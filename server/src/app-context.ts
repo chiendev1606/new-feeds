@@ -8,6 +8,8 @@ export interface AppContext {
   db: Database;
   repository: FeedRepository;
   simulation: SimulationConfig;
+  /** Các viewer bị "hết hạn session" giả lập (lesson 12) → /api trả 401 cho tới khi gọi /api/session/refresh. */
+  expiredSessions: Set<string>;
 }
 
 export function createAppContext(db: Database, overrides: Partial<SimulationConfig> = {}): AppContext {
@@ -15,5 +17,6 @@ export function createAppContext(db: Database, overrides: Partial<SimulationConf
     db,
     repository: new FeedRepository(db),
     simulation: { ...DEFAULT_SIMULATION_CONFIG, ...overrides },
+    expiredSessions: new Set(),
   };
 }

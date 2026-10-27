@@ -7,6 +7,8 @@
  *
  * `run` không nên throw – nơi gọi tự xử lý lỗi bên trong. Nếu có throw, hàng đợi của khoá vẫn được giải phóng.
  */
+// 📖 Bài học lesson-05 – mỗi khoá chỉ một lần chạy, ý định mới đè ý định chờ (docs/lessons/lesson-05.md)
+// #region learn:latest-intent-queue
 export class LatestIntentQueue<T> {
   private readonly pendingByKey = new Map<string, { intent: T | null }>();
 
@@ -32,3 +34,4 @@ export class LatestIntentQueue<T> {
     return true;
   }
 }
+// #endregion learn:latest-intent-queue

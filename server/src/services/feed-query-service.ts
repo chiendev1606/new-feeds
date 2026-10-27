@@ -23,16 +23,25 @@ export interface FeedQuery {
   direction?: 'older' | 'newer';
 }
 
+// 📖 Bài học lesson-02 – kẹp kích thước trang để chặn client xin quá nhiều (docs/lessons/lesson-02.md)
+// #region learn:clamp-page-size
 export function clampPageSize(raw: unknown): number {
   const parsed = Number(raw ?? DEFAULT_PAGE_SIZE);
   if (!Number.isFinite(parsed)) throw new HttpError(400, 'INVALID_COUNT', 'count phải là số');
   return Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(parsed)));
 }
+// #endregion learn:clamp-page-size
 
+// 📖 Bài học lesson-03 – gom user/media/post thành map theo id, số query không phụ thuộc số bài (docs/lessons/lesson-03.md)
+// #region learn:build-normalized-entities
 /**
  * Gom post + users/media được tham chiếu thành các map theo id (mỗi entity xuất hiện đúng 1 lần).
- * Tổng cộng 3 query cho cả trang, bất kể trang có bao nhiêu bài (không N+1).
+ * Số query không phụ thuộc số bài trong trang (không N+1).
  * Truyền executor (client của transaction) để đọc được dữ liệu chính transaction đó vừa ghi.
+ *
+ * Độ trễ: với pool, số liệu reaction, users (tác giả + mention) và media là ba việc ĐỘC LẬP nên chạy song song (một vòng DB).
+ * Chỉ người react mẫu (sampleReactorIds) phải chờ số liệu reaction mới biết → truy vấn bổ sung, và CHỈ những người chưa có.
+ * Trong transaction chỉ có 1 kết nối → mọi truy vấn chạy lần lượt.
  */
 export async function buildNormalizedEntities(repository: FeedRepository, posts: readonly Post[], viewerId: string, executor?: QueryExecutor) {
   const userIds = new Set<string>();
@@ -42,22 +51,30 @@ export async function buildNormalizedEntities(repository: FeedRepository, posts:
     for (const entity of post.body.entities) if (entity.type === 'mention') userIds.add(entity.userId);
     for (const mediaId of post.mediaIds) mediaIds.add(mediaId);
   }
-  const queries = [
-    () => personalizePosts(repository, posts, viewerId, executor),
-    () => repository.getUsersByIds([...userIds], executor),
-    () => repository.getMediaByIds([...mediaIds], executor),
-  ] as const;
-  // Pool: 3 query chạy song song trên 3 kết nối. Transaction: chỉ có 1 kết nối → phải chạy lần lượt.
-  const [personalized, users, media] = executor
-    ? [await queries[0](), await queries[1](), await queries[2]()]
-    : await Promise.all([queries[0](), queries[1](), queries[2]()]);
+  const loadStats = () => personalizePosts(repository, posts, viewerId, executor);
+  const loadUsers = (ids: readonly string[]) => repository.getUsersByIds(ids, executor, viewerId);
+  const loadMedia = () => repository.getMediaByIds([...mediaIds], executor);
+  const [personalized, baseUsers, media] = executor
+    ? [await loadStats(), await loadUsers([...userIds]), await loadMedia()]
+    : await Promise.all([loadStats(), loadUsers([...userIds]), loadMedia()]);
+
+  // Người react mẫu còn thiếu (thường chỉ vài người) → một truy vấn nhỏ; không có ai thiếu thì bỏ qua hẳn.
+  const missingReactorIds = new Set<string>();
+  for (const post of personalized) {
+    for (const reactorId of post.engagementSummary.sampleReactorIds ?? []) if (!userIds.has(reactorId)) missingReactorIds.add(reactorId);
+  }
+  const reactorUsers = missingReactorIds.size > 0 ? await loadUsers([...missingReactorIds]) : [];
+  const users = [...baseUsers, ...reactorUsers];
   return {
     posts: Object.fromEntries(personalized.map((post) => [post.id, post])) as Record<string, Post>,
     users: Object.fromEntries(users.map((user) => [user.id, user])) as Record<string, User>,
     media: Object.fromEntries(media.map((item) => [item.id, item])) as Record<string, Media>,
   };
 }
+// #endregion learn:build-normalized-entities
 
+// 📖 Bài học shared-foundations §2 – cursor, direction, generation và response chuẩn hoá của một trang feed (docs/lessons/shared-foundations.md)
+// #region learn:get-feed-page
 export async function getFeedPage(repository: FeedRepository, query: FeedQuery): Promise<NormalizedFeedResponse> {
   const count = clampPageSize(query.count);
   const direction = query.direction ?? 'older';
@@ -91,3 +108,4 @@ export async function getFeedPage(repository: FeedRepository, query: FeedQuery):
     ...(await buildNormalizedEntities(repository, page, query.viewerId)),
   };
 }
+// #endregion learn:get-feed-page

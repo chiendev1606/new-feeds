@@ -1,0 +1,13 @@
+/* Style riêng của lesson 12 (không đụng global.css). */
+.l12-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: var(--radius); border: 1px solid var(--border); margin-block-end: 0.75rem; }
+.l12-banner--online { background: color-mix(in srgb, var(--success) 12%, var(--surface)); }
+.l12-banner--offline { background: color-mix(in srgb, var(--danger) 14%, var(--surface)); border-color: var(--danger); font-weight: 600; }
+.l12-banner--cache { background: color-mix(in srgb, #f5a623 18%, var(--surface)); border-color: #f5a623; }
+.l12-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-block: 0.5rem; }
+.l12-composer { display: block; inline-size: 100%; box-sizing: border-box; font: inherit; }
+.l12-outbox { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; }
+.l12-outbox li { border: 1px dashed var(--border); border-radius: 6px; padding: 0.5rem; }
+.l12-outbox li[data-state='rejected'] { border-color: var(--danger); }
+.l12-outbox__text { margin-block: 0.25rem; word-break: break-word; }
+.l12-card-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.l12-detail-button { font-size: 0.8rem; }

@@ -11,6 +11,8 @@
  */
 import { useEffect, useRef, useState } from 'react';
 
+// 📖 Bài học lesson-04 – IntersectionObserver với rootMargin và observeKey để không bị kẹt (docs/lessons/lesson-04.md)
+// #region learn:intersection-sentinel
 export interface IntersectionSentinelOptions {
   rootMargin?: string;
   enabled?: boolean;
@@ -38,3 +40,4 @@ export function useIntersectionSentinel(onIntersect: () => void, { rootMargin = 
 
   return setElement;
 }
+// #endregion learn:intersection-sentinel

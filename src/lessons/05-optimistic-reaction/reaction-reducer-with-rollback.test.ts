@@ -23,7 +23,7 @@ const post: Post = {
 
 const initial: ReactionAwareFeedState = { ...INITIAL_FEED_STATE, postsById: { p1: post }, pendingReactions: {} };
 
-const response = (reaction: ReactionType | null, total: EngagementSummary): ReactionResponse => ({ postId: 'p1', viewerReaction: reaction, engagementSummary: total });
+const response = (reaction: ReactionType | null, total: EngagementSummary): ReactionResponse => ({ postId: 'p1', viewerReaction: reaction, engagementSummary: total, confirmedAt: '2026-01-01T00:00:00.000Z' });
 
 describe('applyReactionChangeToSummary', () => {
   it('thêm, đổi, bỏ reaction', () => {

@@ -18,6 +18,8 @@ function shortenUrl(url: string) {
   return url.replace(/cursor=([^&]{12})[^&]*/, 'cursor=$1…');
 }
 
+// 📖 Bài học shared-foundations §2 – log mỗi request kèm thời gian và idempotency key (docs/lessons/shared-foundations.md)
+// #region learn:request-logger
 export function createRequestLoggerMiddleware(enabled = true): RequestHandler {
   return (req, res, next) => {
     if (!enabled) return next();
@@ -35,3 +37,4 @@ export function createRequestLoggerMiddleware(enabled = true): RequestHandler {
     next();
   };
 }
+// #endregion learn:request-logger

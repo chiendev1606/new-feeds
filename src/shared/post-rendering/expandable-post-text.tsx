@@ -5,6 +5,8 @@
  */
 import { useId, useState, type ReactNode } from 'react';
 
+// 📖 Bài học lesson-07 – line-clamp bằng CSS, aria-expanded và dir=auto (docs/lessons/lesson-07.md)
+// #region learn:expandable-post-text
 const LONG_TEXT_THRESHOLD = 280;
 
 export function ExpandablePostText({ text, children }: { text: string; children: ReactNode }) {
@@ -25,3 +27,4 @@ export function ExpandablePostText({ text, children }: { text: string; children:
     </div>
   );
 }
+// #endregion learn:expandable-post-text

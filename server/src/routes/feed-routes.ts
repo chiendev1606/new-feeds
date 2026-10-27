@@ -9,6 +9,8 @@ export function createFeedRoutes(context: AppContext) {
   const router = Router();
 
   // Express 5: handler async ném lỗi → tự chuyển tới error-handler-middleware.
+  // 📖 Bài học shared-foundations §2 – GET /api/feed và Cache-Control private vì feed cá nhân hoá (docs/lessons/shared-foundations.md)
+  // #region learn:feed-route-private-cache
   router.get('/feed', async (req, res) => {
     const direction = req.query.direction ?? 'older';
     if (direction !== 'older' && direction !== 'newer') {
@@ -24,6 +26,7 @@ export function createFeedRoutes(context: AppContext) {
     // Feed được cá nhân hoá (viewerReaction...) → chỉ được cache trong trình duyệt của chính người đó, không qua CDN/proxy.
     res.set('Cache-Control', 'private, no-store').json(response);
   });
+  // #endregion learn:feed-route-private-cache
 
   router.get('/feed-offset', async (req, res) => {
     const response = await getFeedPageByOffset(context.repository, req.viewerId, req.query.offset, req.query.count);

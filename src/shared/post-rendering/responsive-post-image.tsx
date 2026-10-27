@@ -10,6 +10,8 @@
  */
 import type { Media } from '../types/feed-entities';
 
+// 📖 Bài học lesson-07 – srcset, aspect-ratio giữ chỗ, lazy loading và decoding async (docs/lessons/lesson-07.md)
+// #region learn:responsive-post-image
 const SRCSET_WIDTHS = [320, 640, 960, 1280];
 
 export interface ResponsivePostImageProps {
@@ -37,7 +39,10 @@ export function ResponsivePostImage({ media, priority = false, sizes = '(max-wid
     />
   );
 }
+// #endregion learn:responsive-post-image
 
+// 📖 Bài học lesson-07 – lưới ảnh 1 đến 4 và gộp ảnh thừa thành +N (docs/lessons/lesson-07.md)
+// #region learn:post-media-grid
 /** Lưới ảnh 1/2/3/4+; ảnh thứ 5 trở đi gộp thành "+N". */
 export function PostMediaGrid({ media, priority }: { media: Media[]; priority?: boolean }) {
   if (media.length === 0) return null;
@@ -54,3 +59,4 @@ export function PostMediaGrid({ media, priority }: { media: Media[]; priority?: 
     </div>
   );
 }
+// #endregion learn:post-media-grid

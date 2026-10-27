@@ -6,6 +6,8 @@
 import type { RequestHandler } from 'express';
 import type { AppContext } from '../app-context.js';
 
+// 📖 Bài học shared-foundations §3 – độ trễ có jitter và lỗi 503 kèm Retry-After để thử retry (docs/lessons/shared-foundations.md)
+// #region learn:latency-and-failure
 export function createSimulatedLatencyAndFailureMiddleware(context: AppContext): RequestHandler {
   return async (_req, res, next) => {
     const { latencyMs, failRate } = context.simulation;
@@ -23,3 +25,4 @@ export function createSimulatedLatencyAndFailureMiddleware(context: AppContext):
     next();
   };
 }
+// #endregion learn:latency-and-failure

@@ -78,9 +78,42 @@ export const LESSONS: LessonDefinition[] = [
     summary: 'Chỉ giữ các bài đang nhìn thấy trong DOM, dùng spacer và cache chiều cao.',
     Component: lazy(() => import('./08-virtualization/lesson-08-virtualization')),
   },
+  {
+    id: 'lesson-09',
+    number: 9,
+    title: 'Feed list nâng cao',
+    radioSections: 'O – Feed list',
+    summary: 'Giữ vị trí scroll khi quay lại, feed cũ, đồng bộ giữa các tab, gộp request trùng, focus khi virtualize.',
+    Component: lazy(() => import('./09-advanced-feed-list/lesson-09-advanced-feed-list')),
+  },
+  {
+    id: 'lesson-10',
+    number: 10,
+    title: 'Lazy-load code & JS tiers',
+    radioSections: 'O – Feed post / Composer / Performance',
+    summary: 'Menu, hover card, renderer theo loại bài tải khi cần; composer sinh entity cho #tag và @mention.',
+    Component: lazy(() => import('./10-lazy-loading/lesson-10-lazy-loading')),
+  },
+  {
+    id: 'lesson-11',
+    number: 11,
+    title: 'Đo lường & telemetry',
+    radioSections: 'O – Performance / Telemetry',
+    summary: 'LCP/CLS/INP so với budget, đếm lượt hiển thị gửi theo lô bằng sendBeacon, Intl.ListFormat.',
+    Component: lazy(() => import('./11-metrics-telemetry/lesson-11-metrics-telemetry')),
+  },
+  {
+    id: 'lesson-12',
+    number: 12,
+    title: 'Resilience & offline',
+    radioSections: 'O – Networking / Offline',
+    summary: 'Làm mới session khi gặp 401, xử lý 404, outbox khi offline, Service Worker.',
+    Component: lazy(() => import('./12-resilience-offline/lesson-12-resilience-offline')),
+  },
 ];
 
+/** "#/lesson-09/post/abc" → lesson-09: phần sau dấu "/" là route con, lesson tự xử lý. */
 export function findLessonByHash(hash: string): LessonDefinition | undefined {
-  const id = hash.replace(/^#\/?/, '');
+  const id = hash.replace(/^#\/?/, '').split('/')[0];
   return LESSONS.find((lesson) => lesson.id === id);
 }

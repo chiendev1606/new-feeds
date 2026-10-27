@@ -10,10 +10,15 @@
  */
 import { createHash } from 'node:crypto';
 
+// 📖 Bài học shared-foundations §8 – băm nội dung request để phát hiện dùng sai key (docs/lessons/shared-foundations.md)
+// #region learn:request-hash
 export function hashRequestBody(body: unknown): string {
   return createHash('sha256').update(JSON.stringify(body)).digest('hex');
 }
+// #endregion learn:request-hash
 
+// 📖 Bài học shared-foundations §8 – Drizzle bọc lỗi Postgres trong cause nên phải đọc đệ quy (docs/lessons/shared-foundations.md)
+// #region learn:unique-violation-in-cause
 /** Mã lỗi PostgreSQL khi vi phạm UNIQUE/PRIMARY KEY. */
 const UNIQUE_VIOLATION = '23505';
 
@@ -23,3 +28,4 @@ export function isUniqueViolation(error: unknown): boolean {
   const { code, cause } = error as { code?: string; cause?: unknown };
   return code === UNIQUE_VIOLATION || isUniqueViolation(cause);
 }
+// #endregion learn:unique-violation-in-cause

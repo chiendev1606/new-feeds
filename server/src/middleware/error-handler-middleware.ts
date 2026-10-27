@@ -2,6 +2,8 @@
 import type { ErrorRequestHandler } from 'express';
 import { HttpError } from '../services/http-error.js';
 
+// 📖 Bài học shared-foundations §2 – chuẩn hoá lỗi, không lộ chi tiết lỗi 500 cho client (docs/lessons/shared-foundations.md)
+// #region learn:error-handler
 export function createErrorHandlerMiddleware(): ErrorRequestHandler {
   return (error, _req, res, _next) => {
     if (error instanceof HttpError) {
@@ -19,3 +21,4 @@ export function createErrorHandlerMiddleware(): ErrorRequestHandler {
     res.status(status).json({ error: { code: status === 413 ? 'PAYLOAD_TOO_LARGE' : 'BAD_REQUEST', message: String(error?.message ?? 'Request không hợp lệ') } });
   };
 }
+// #endregion learn:error-handler

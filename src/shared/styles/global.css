@@ -209,3 +209,8 @@ button.primary { background: var(--accent); color: #fff; border-color: var(--acc
 /* Ẩn khỏi màn hình nhưng screen reader vẫn đọc. */
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .composer__upload input { width: 100%; font-size: 0.75rem; padding: 0.2rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); }
+
+/* Thanh tab Demo / Bài học (lesson-layout) – nằm ở global vì tab hiện ngay khi vào lesson, trước khi tải học liệu. */
+.lesson-tabs { display: flex; gap: 0.25rem; border-block-end: 1px solid var(--border); margin-block: 0.75rem 1rem; }
+.lesson-tabs [role='tab'] { border: none; border-block-end: 3px solid transparent; border-radius: 6px 6px 0 0; background: transparent; padding: 0.5rem 1rem; font-weight: 600; color: var(--muted); }
+.lesson-tabs [role='tab'][aria-selected='true'] { color: var(--accent); border-block-end-color: var(--accent); background: var(--surface); }

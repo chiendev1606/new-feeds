@@ -16,10 +16,15 @@ export interface FeedCursorPayload {
   generation: number;
 }
 
+// 📖 Bài học lesson-02 – cursor mờ: JSON gói trong base64url (docs/lessons/lesson-02.md)
+// #region learn:cursor-encode
 export function encodeCursor(payload: FeedCursorPayload): string {
   return Buffer.from(JSON.stringify([payload.createdAt, payload.id, payload.generation]), 'utf8').toString('base64url');
 }
+// #endregion learn:cursor-encode
 
+// 📖 Bài học lesson-02 – giải mã và kiểm tra cursor, sai thì trả 400 thay vì 500 (docs/lessons/lesson-02.md)
+// #region learn:cursor-decode-validate
 export function decodeCursor(cursor: string): FeedCursorPayload {
   try {
     const parsed: unknown = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
@@ -38,3 +43,4 @@ export function decodeCursor(cursor: string): FeedCursorPayload {
   }
   throw new HttpError(400, 'INVALID_CURSOR', 'Cursor không hợp lệ');
 }
+// #endregion learn:cursor-decode-validate

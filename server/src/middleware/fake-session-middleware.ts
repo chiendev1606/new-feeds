@@ -10,6 +10,10 @@
  */
 import type { RequestHandler } from 'express';
 import type { FeedRepository } from '../data/feed-repository.js';
+import { HttpError } from '../services/http-error.js';
+
+/** Endpoint làm mới session – phải gọi được cả khi session đã hết hạn. */
+const REFRESH_PATH = '/api/session/refresh';
 
 const DEFAULT_VIEWER_ID = 'user-1';
 
@@ -26,7 +30,9 @@ function readCookie(header: string | undefined, name: string): string | undefine
     .find(([key]) => key === name)?.[1];
 }
 
-export function createFakeSessionMiddleware(repository: FeedRepository): RequestHandler {
+// 📖 Bài học lesson-12 – danh tính lấy từ cookie phía server và giả lập session hết hạn trả 401 (docs/lessons/lesson-12.md)
+// #region learn:session-middleware
+export function createFakeSessionMiddleware(repository: FeedRepository, expiredSessions: ReadonlySet<string>): RequestHandler {
   const knownUsers = new Set<string>();
   return async (req, res, next) => {
     const sid = readCookie(req.headers.cookie, 'sid');
@@ -41,6 +47,14 @@ export function createFakeSessionMiddleware(repository: FeedRepository): Request
     } else {
       req.viewerId = sid;
     }
+    // Từng bước: (1) viewerId đã được xác định ở trên; (2) viewer nằm trong tập hết hạn giả lập thì chặn mọi /api bằng 401;
+    // (3) riêng /api/session/refresh được đi qua để client làm mới phiên.
+    // Session hết hạn (lesson 12): mọi /api trả 401 → client làm mới session một lần rồi gửi lại request.
+    if (expiredSessions.has(req.viewerId) && req.path.startsWith('/api/') && req.path !== REFRESH_PATH) {
+      next(new HttpError(401, 'SESSION_EXPIRED', 'Phiên đăng nhập đã hết hạn'));
+      return;
+    }
     next();
   };
 }
+// #endregion learn:session-middleware

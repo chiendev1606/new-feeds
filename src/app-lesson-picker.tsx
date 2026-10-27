@@ -5,19 +5,32 @@
 import { Suspense, useEffect, useState } from 'react';
 import { findLessonByHash, LESSONS } from './lessons/lesson-registry';
 
+/** "#/lesson-09/post/1" → "lesson-09". */
+// 📖 Bài học shared-foundations §1 – SPA điều hướng bằng hash để giữ store, cache và vị trí scroll (docs/lessons/shared-foundations.md)
+// #region learn:hash-router
+const lessonKeyOf = (hash: string) => hash.replace(/^#\/?/, '').split('/')[0] ?? '';
+
 function useLocationHash() {
   const [hash, setHash] = useState(() => window.location.hash);
   useEffect(() => {
+    let previousHash = window.location.hash;
     const onHashChange = () => {
-      setHash(window.location.hash);
-      window.scrollTo(0, 0);
+      const nextHash = window.location.hash;
+      setHash(nextHash);
+      // Đổi route con TRONG cùng một lesson (#/lesson-09 → #/lesson-09/post/1): lesson tự quản lý vị trí scroll
+      // (vd khôi phục khi quay lại). Chỉ chuyển sang lesson/trang khác mới cuộn lên đầu.
+      if (lessonKeyOf(previousHash) !== lessonKeyOf(nextHash)) window.scrollTo(0, 0);
+      previousHash = nextHash;
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
   return hash;
 }
+// #endregion learn:hash-router
 
+// 📖 Bài học shared-foundations §1 – mỗi lesson là một chunk tải lười bằng React.lazy và Suspense (docs/lessons/shared-foundations.md)
+// #region learn:lesson-lazy-suspense
 export function AppLessonPicker() {
   const hash = useLocationHash();
   const lesson = findLessonByHash(hash);
@@ -30,11 +43,12 @@ export function AppLessonPicker() {
       </Suspense>
     );
   }
+// #endregion learn:lesson-lazy-suspense
 
   return (
     <main className="lesson-picker">
       <header>
-        <h1>News Feed — System Design qua 8 lesson</h1>
+        <h1>News Feed — System Design qua 12 lesson</h1>
         <p>
           Dựa trên bài{' '}
           <a href="https://www.greatfrontend.com/questions/system-design/news-feed-facebook?format=system-design" target="_blank" rel="noopener noreferrer">

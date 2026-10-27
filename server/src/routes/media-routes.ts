@@ -35,6 +35,8 @@ function readAltHeader(value: string | undefined) {
 export function createMediaUploadRoutes(context: AppContext) {
   const router = Router();
 
+  // 📖 Bài học lesson-06 – upload ảnh trước, kiểm tra type, lưu chủ sở hữu (docs/lessons/lesson-06.md)
+  // #region learn:media-upload
   router.post('/media/uploads', express.raw({ type: () => true, limit: MAX_UPLOAD_BYTES }), async (req, res) => {
     const contentType = (req.header('content-type') ?? '').split(';')[0]!.trim();
     // Kiểm tra type ở server. Hệ thống thật còn phải: đọc magic bytes, re-encode, strip EXIF, quét malware.
@@ -54,6 +56,7 @@ export function createMediaUploadRoutes(context: AppContext) {
     const response: MediaUploadResponse = { mediaId, media };
     res.status(201).json(response);
   });
+  // #endregion learn:media-upload
 
   return router;
 }
@@ -61,6 +64,8 @@ export function createMediaUploadRoutes(context: AppContext) {
 export function createMediaServingRoutes(context: AppContext) {
   const router = Router();
 
+  // 📖 Bài học lesson-07 – phục vụ ảnh với nosniff, CSP sandbox và cache theo loại ảnh (docs/lessons/lesson-07.md)
+  // #region learn:media-serve-nosniff
   router.get('/media/:mediaId', async (req, res) => {
     const found = await context.repository.getMediaForServing(req.params.mediaId);
     if (!found) throw new HttpError(404, 'MEDIA_NOT_FOUND', 'Không tìm thấy ảnh');
@@ -77,6 +82,7 @@ export function createMediaServingRoutes(context: AppContext) {
     // Ảnh không đổi theo id+width → cache lâu (giống CDN với URL có version).
     res.set('Content-Type', 'image/svg+xml').set('Cache-Control', 'public, max-age=31536000, immutable').send(renderMediaSvg(found.media, width));
   });
+  // #endregion learn:media-serve-nosniff
 
   return router;
 }

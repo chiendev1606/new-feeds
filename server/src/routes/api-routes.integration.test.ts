@@ -2,10 +2,12 @@
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import type { CreatePostResponse, NormalizedFeedResponse, ReactionResponse } from '../../../shared-contracts/feed-api-contracts.js';
+import type { CreatePostResponse, NormalizedFeedResponse, ReactionResponse, TelemetrySummaryResponse } from '../../../shared-contracts/feed-api-contracts.js';
 import type { AppContext } from '../app-context.js';
 import { createAppContext } from '../app-context.js';
 import { createApp } from '../create-express-app.js';
+import { eq } from 'drizzle-orm';
+import { follows, reactions } from '../data/database-schema.js';
 import { useSeededTestDatabase } from '../test-support/test-database.js';
 
 const db = useSeededTestDatabase();
@@ -26,6 +28,7 @@ afterAll(() => {
 
 beforeEach(() => {
   context.simulation = { latencyMs: 0, failRate: 0, autoNewPostsEverySec: 0 };
+  context.expiredSessions.clear();
 });
 
 const jsonRequest = (method: string, body: unknown, headers: Record<string, string> = {}) => ({
@@ -170,5 +173,120 @@ describe('session', () => {
     const response = await createPost({ body: { text: 'Ma', entities: [] }, mediaIds: [] }, 'k-ghost', { cookie: 'sid=ghost' });
     expect(response.status).toBe(201);
     expect(((await response.json()) as CreatePostResponse).post.authorId).toBe('user-1');
+  });
+});
+
+describe('feed cá nhân hoá (lesson 09–11)', () => {
+  it('reactor mẫu có trong users, user kèm relationshipToViewer', async () => {
+    const feed = (await (await fetch(`${baseUrl}/api/feed?count=20`)).json()) as NormalizedFeedResponse;
+    const withSamples = feed.feed.postIds.map((id) => feed.posts[id]!).filter((post) => (post.engagementSummary.sampleReactorIds?.length ?? 0) > 0);
+    expect(withSamples.length).toBeGreaterThan(0);
+    for (const post of withSamples) {
+      expect(post.engagementSummary.sampleReactorIds!.length).toBeLessThanOrEqual(2);
+      expect(post.engagementSummary.sampleReactorIds).not.toContain('user-1');
+      for (const reactorId of post.engagementSummary.sampleReactorIds!) expect(feed.users[reactorId]).toBeDefined();
+    }
+    const friend = Object.values(feed.users).find((user) => user.id === 'user-2');
+    if (friend) expect(friend.relationshipToViewer).toEqual({ isSelf: false, isFriend: true, isFollowing: true });
+    for (const user of Object.values(feed.users)) expect(user.relationshipToViewer).toBeDefined();
+  });
+
+  it('reactor mẫu: BẠN BÈ (theo dõi lẫn nhau) trước, rồi người viewer theo dõi, rồi người lạ; không gồm chính viewer; pool và transaction cho cùng kết quả', async () => {
+    const postId = 'post-0300';
+    await db.db.delete(follows);
+    await db.db.delete(reactions).where(eq(reactions.postId, postId));
+    await db.db.insert(follows).values([
+      { followerId: 'user-1', followeeId: 'user-3' }, // viewer chỉ theo dõi user-3
+      { followerId: 'user-1', followeeId: 'user-5' }, // user-5 là bạn bè (hai chiều)
+      { followerId: 'user-5', followeeId: 'user-1' },
+    ]);
+    for (const userId of ['user-1', 'user-2', 'user-3', 'user-5']) await db.repository.setReaction(postId, userId, 'like');
+
+    const viaPool = (await db.repository.getReactionStats([postId], 'user-1')).get(postId)!;
+    expect(viaPool.sampleReactorIds).toEqual(['user-5', 'user-3']); // user-2 (người lạ) bị đẩy ra ngoài, user-1 (viewer) không có mặt
+    expect(viaPool.total).toBe(4);
+    expect(viaPool.viewerReaction).toBe('like');
+
+    const viaTransaction = await db.db.transaction(async (tx) => (await db.repository.getReactionStats([postId], 'user-1', tx)).get(postId)!);
+    expect(viaTransaction).toEqual(viaPool);
+  });
+
+  it('reaction response có confirmedAt (ISO)', async () => {
+    const response = (await (await fetch(`${baseUrl}/api/posts/post-0300/reaction`, jsonRequest('PUT', { reaction: 'like' }))).json()) as ReactionResponse;
+    expect(Number.isNaN(Date.parse(response.confirmedAt))).toBe(false);
+  });
+
+  it('text NFD KHÔNG có entity → server tự chuẩn hoá NFC và lưu (201)', async () => {
+    const nfd = 'Vie\u0302\u0323t Nam'; // "Việt" ở dạng NFD (e + dấu mũ + dấu nặng)
+    const response = await createPost({ body: { text: nfd, entities: [] }, mediaIds: [] }, 'k-nfd-plain');
+    expect(response.status).toBe(201);
+    const created = (await response.json()) as CreatePostResponse;
+    expect(created.post.body.text).toBe(nfd.normalize('NFC'));
+  });
+
+  it('text NFD CÓ entity → 400 TEXT_NOT_NFC (offset phụ thuộc dạng chuẩn hoá); bản NFC thì được', async () => {
+    const nfd = 'Vie\u0302\u0323t Nam';
+    const response = await createPost({ body: { text: nfd, entities: [{ type: 'hashtag', start: 0, end: 4, tag: 'viet' }] }, mediaIds: [] }, 'k-nfd-entity');
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: { code: string } }).error.code).toBe('TEXT_NOT_NFC');
+    const nfc = nfd.normalize('NFC');
+    expect((await createPost({ body: { text: nfc, entities: [{ type: 'hashtag', start: 0, end: 4, tag: 'viet' }] }, mediaIds: [] }, 'k-nfc-entity')).status).toBe(201);
+  });
+});
+
+describe('telemetry (lesson 11)', () => {
+  const at = new Date().toISOString();
+  const events = [
+    { type: 'impression', postId: 'post-0300', at },
+    { type: 'dwell', postId: 'post-0300', durationMs: 1500, at },
+    { type: 'web-vital', name: 'LCP', value: 1234, at },
+  ];
+
+  it('nhận JSON và text/plain (sendBeacon), trả 204, summary tổng hợp đúng', async () => {
+    expect((await fetch(`${baseUrl}/api/telemetry`, jsonRequest('POST', { events }))).status).toBe(204);
+    const beacon = await fetch(`${baseUrl}/api/telemetry`, { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ events }) });
+    expect(beacon.status).toBe(204);
+    const summary = (await (await fetch(`${baseUrl}/api/telemetry/summary`)).json()) as TelemetrySummaryResponse;
+    expect(summary.totalEvents).toBe(6);
+    expect(summary.topImpressions[0]).toEqual({ postId: 'post-0300', impressions: 2, totalDwellMs: 3000 });
+    expect(summary.webVitalsP75.LCP).toBe(1234);
+  });
+
+  it('lô sai định dạng → 400', async () => {
+    expect((await fetch(`${baseUrl}/api/telemetry`, jsonRequest('POST', { events: [] }))).status).toBe(400);
+    expect((await fetch(`${baseUrl}/api/telemetry`, jsonRequest('POST', { events: [{ type: 'web-vital', name: 'FOO', value: 1, at }] }))).status).toBe(400);
+  });
+
+  it('chặn số vô hạn/âm/quá lớn và postId quá dài → 400', async () => {
+    const post = (body: string) => fetch(`${baseUrl}/api/telemetry`, { method: 'POST', headers: { 'content-type': 'application/json' }, body });
+    const dwell = (durationMs: string) => `{"events":[{"type":"dwell","postId":"post-0300","durationMs":${durationMs},"at":"${at}"}]}`;
+    expect((await post(dwell('1e309'))).status).toBe(400); // JSON.parse('1e309') = Infinity
+    expect((await post(dwell('-1'))).status).toBe(400);
+    expect((await post(dwell('86400001'))).status).toBe(400);
+    expect((await post(dwell('86400000'))).status).toBe(204);
+    expect((await post(`{"events":[{"type":"web-vital","name":"LCP","value":-5,"at":"${at}"}]}`)).status).toBe(400);
+    expect((await post(`{"events":[{"type":"web-vital","name":"LCP","value":1e8,"at":"${at}"}]}`)).status).toBe(400);
+    expect((await post(`{"events":[{"type":"impression","postId":"${'p'.repeat(101)}","at":"${at}"}]}`)).status).toBe(400);
+  });
+});
+
+describe('session hết hạn + mock (lesson 12)', () => {
+  it('hết hạn → /api trả 401 SESSION_EXPIRED; refresh → hoạt động lại', async () => {
+    await fetch(`${baseUrl}/__mock/expire-session`, { method: 'POST' });
+    const expired = await fetch(`${baseUrl}/api/feed?count=1`);
+    expect(expired.status).toBe(401);
+    expect(((await expired.json()) as { error: { code: string } }).error.code).toBe('SESSION_EXPIRED');
+    expect((await fetch(`${baseUrl}/api/session/refresh`, { method: 'POST' })).status).toBe(200);
+    expect((await fetch(`${baseUrl}/api/feed?count=1`)).status).toBe(200);
+  });
+
+  it('GET /api/session/me trả viewerId', async () => {
+    expect(await (await fetch(`${baseUrl}/api/session/me`)).json()).toEqual({ viewerId: 'user-1' });
+  });
+
+  it('xoá bài ở server → reaction và chi tiết bài trả 404', async () => {
+    expect(await (await fetch(`${baseUrl}/__mock/delete-post/post-0300`, { method: 'POST' })).json()).toEqual({ deleted: true });
+    expect((await fetch(`${baseUrl}/api/posts/post-0300/reaction`, jsonRequest('PUT', { reaction: 'like' }))).status).toBe(404);
+    expect((await fetch(`${baseUrl}/api/posts/post-0300`)).status).toBe(404);
   });
 });

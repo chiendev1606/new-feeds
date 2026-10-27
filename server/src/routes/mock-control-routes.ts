@@ -3,6 +3,8 @@
  *   GET  /__mock/config
  *   POST /__mock/config               { latencyMs?, failRate?, autoNewPostsEverySec? }
  *   POST /__mock/insert-new-posts?n=3
+ *   POST /__mock/expire-session         session của viewer hiện tại hết hạn → /api trả 401
+ *   POST /__mock/delete-post/:id        giả lập tác giả xoá bài → thao tác trên bài đó trả 404
  *   POST /__mock/reset                xoá sạch DB rồi seed lại (npm run db:backup trước nếu cần giữ dữ liệu)
  */
 import { Router } from 'express';
@@ -30,6 +32,18 @@ export function createMockControlRoutes(context: AppContext, onConfigChanged: ()
     const { posts, generation } = await context.repository.insertRandomNewPosts(count);
     console.log(`🆕 chèn ${posts.length} bài mới lên đầu feed (generation=${generation})`);
     res.json({ insertedPostIds: posts.map((post) => post.id), generation });
+  });
+
+  router.post('/expire-session', (req, res) => {
+    context.expiredSessions.add(req.viewerId);
+    console.log(`⌛ session của ${req.viewerId} đã hết hạn (giả lập)`);
+    res.json({ ok: true, viewerId: req.viewerId });
+  });
+
+  router.post('/delete-post/:postId', async (req, res) => {
+    const deleted = await context.repository.deletePost(req.params.postId);
+    console.log(`🗑️  xoá bài ${req.params.postId}: ${deleted ? 'ok' : 'không tồn tại'}`);
+    res.json({ deleted });
   });
 
   router.post('/reset', async (_req, res) => {

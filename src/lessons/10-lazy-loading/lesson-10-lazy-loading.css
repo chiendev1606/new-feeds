@@ -1,0 +1,45 @@
+/* CSS riêng của lesson 10 (không sửa global.css). Import từ component để đi cùng chunk. */
+
+/* Tên tác giả: <button> nhưng trông như chữ trong tiêu đề bài. */
+.author-name {
+  border: none; background: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer;
+  min-height: 24px; text-align: start;
+}
+.author-name:hover { text-decoration: underline; }
+
+.author-hover-card {
+  position: fixed; z-index: 20; box-sizing: border-box; display: flex; flex-direction: column; gap: 0.25rem;
+  padding: 0.75rem 1rem; background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 4px 16px rgb(0 0 0 / 0.2);
+}
+.author-hover-card--loading { inline-size: 260px; block-size: 96px; background: var(--skeleton); }
+.author-hover-card__relation { color: var(--accent); font-weight: 600; }
+
+/* Renderer theo loại bài */
+.post-text { margin-block: 0.5rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.post-text--status { font-size: 1.35rem; line-height: 1.35; }
+.link-preview-card {
+  display: block; margin-block: 0.5rem; padding: 0.6rem 0.8rem; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--bg); color: var(--text); text-decoration: none; font-weight: 600;
+}
+.lazy-body-fallback { background: var(--skeleton); border-radius: 8px; margin-block: 0.5rem; }
+
+/* Composer */
+.composer__suggestions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-block: 0.25rem; }
+.composer__preview { margin-block: 0.5rem; padding: 0.5rem 0.75rem; border: 1px dashed var(--border); border-radius: 8px; }
+.composer__entities { margin: 0; padding-inline-start: 1.2rem; font-size: 0.8rem; }
+.emoji-anchor { position: relative; display: inline-block; }
+.emoji-popover { position: absolute; inset-block-end: 100%; inset-inline-start: 0; z-index: 10; margin-block-end: 4px; }
+.emoji-picker {
+  /* Kích thước cố định nằm trong CSS (không trong chunk) → placeholder lúc tải và picker thật cùng cỡ, không nhảy layout. */
+  inline-size: 216px; block-size: 196px; box-sizing: border-box; display: grid; grid-template-columns: repeat(5, 40px); grid-auto-rows: 40px; gap: 4px; padding: 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
+.emoji-picker__item { border: none; background: transparent; font-size: 1.4rem; border-radius: 8px; padding: 0; }
+.emoji-picker__item:hover { background: var(--accent-soft); }
+
+/* Bảng tier + danh sách chunk */
+.data-table { border-collapse: collapse; inline-size: 100%; font-size: 0.85rem; }
+.data-table th, .data-table td { border: 1px solid var(--border); padding: 0.35rem 0.5rem; text-align: start; vertical-align: top; }
+.chunk-list { margin: 0; padding-inline-start: 1.2rem; font-size: 0.78rem; max-block-size: 40vh; overflow: auto; }
+.chunk-list__time { font-variant-numeric: tabular-nums; color: var(--accent); }

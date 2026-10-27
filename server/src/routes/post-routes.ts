@@ -17,6 +17,8 @@ const MAX_ALT_LENGTH = 300;
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const invalidEntity = (message: string) => new HttpError(400, 'INVALID_ENTITY', message);
 
+// 📖 Bài học lesson-06 – validate entity và tạo lại object sạch, không lưu nguyên dữ liệu client (docs/lessons/lesson-06.md)
+// #region learn:entity-sanitize
 /**
  * Validate một entity và TẠO LẠI object sạch – không bao giờ lưu nguyên object client gửi
  * (tránh field lạ, type lạ lọt vào DB rồi làm hỏng client khác khi render).
@@ -42,14 +44,26 @@ function sanitizeEntity(raw: unknown, textLength: number): TextEntity {
       throw invalidEntity('type phải là mention, hashtag hoặc link');
   }
 }
+// #endregion learn:entity-sanitize
 
+// 📖 Bài học lesson-06 – validate body ở server, chuẩn hoá Unicode NFC trước khi tính offset entity (docs/lessons/lesson-06.md)
+// #region learn:validate-post-body-nfc
 /** Validate ở server – không tin client: kiểu dữ liệu, độ dài, range không chồng lấn, mention tới user có thật. */
 async function validatePostBody(raw: unknown, repository: FeedRepository): Promise<PostBody> {
   if (!isRecord(raw) || typeof raw.text !== 'string') throw new HttpError(400, 'INVALID_BODY', 'body.text là bắt buộc');
-  const text = raw.text;
-  if (text.length > MAX_POST_TEXT_LENGTH) throw new HttpError(400, 'BODY_TOO_LONG', `Tối đa ${MAX_POST_TEXT_LENGTH} ký tự`);
+  if (raw.text.length > MAX_POST_TEXT_LENGTH) throw new HttpError(400, 'BODY_TOO_LONG', `Tối đa ${MAX_POST_TEXT_LENGTH} ký tự`);
   const rawEntities = raw.entities ?? [];
   if (!Array.isArray(rawEntities) || rawEntities.length > MAX_ENTITIES) throw invalidEntity('entities phải là mảng (tối đa 100)');
+
+  // Entity range tính theo offset trên text ĐÃ chuẩn hoá NFC. "ệ" có thể là 1 ký tự (NFC) hoặc e + 2 dấu (NFD):
+  // nếu client gửi NFD kèm entity, offset lệch → mention cắt sai chỗ, và server không thể đoán lại offset → từ chối.
+  // Không có entity thì offset không còn ý nghĩa: server tự chuẩn hoá NFC rồi lưu (text dán từ tên file macOS, PDF,
+  // vài bộ gõ hay ra NFD; từ chối chúng sẽ làm vỡ client cũ như lesson 06 vốn không chuẩn hoá).
+  let text = raw.text;
+  if (text !== text.normalize('NFC')) {
+    if (rawEntities.length > 0) throw new HttpError(400, 'TEXT_NOT_NFC', 'body.text phải được chuẩn hoá Unicode NFC khi có entities (offset phụ thuộc dạng chuẩn hoá)');
+    text = text.normalize('NFC');
+  }
 
   const entities = rawEntities.map((entity) => sanitizeEntity(entity, text.length)).sort((a, b) => a.start - b.start);
   entities.forEach((entity, index) => {
@@ -60,6 +74,7 @@ async function validatePostBody(raw: unknown, repository: FeedRepository): Promi
   if (found.length !== mentionedIds.length) throw invalidEntity('Mention tới user không tồn tại');
   return { text, entities };
 }
+// #endregion learn:validate-post-body-nfc
 
 export function createPostRoutes(context: AppContext) {
   const router = Router();
@@ -72,9 +87,13 @@ export function createPostRoutes(context: AppContext) {
     res.set('Cache-Control', 'private, no-store').json({ post: posts[post.id], users, media });
   });
 
+  // 📖 Bài học shared-foundations §8 – đọc key, băm body, phát lại response cũ nếu key đã dùng (docs/lessons/shared-foundations.md)
+  // #region learn:idempotency-key-and-replay
   router.post('/posts', async (req, res) => {
     const idempotencyKey = req.header(IDEMPOTENCY_KEY_HEADER);
     if (!idempotencyKey || idempotencyKey.length > 200) throw new HttpError(400, 'IDEMPOTENCY_KEY_REQUIRED', `Thiếu header ${IDEMPOTENCY_KEY_HEADER}`);
+    // Từng bước: (1) bắt buộc có key; (2) băm body để lần gọi lại cùng key mà khác nội dung bị từ chối 422;
+    // (3) replay() tra bảng idempotency_keys – đã có thì trả đúng response cũ, không tạo bài mới.
     const requestHash = hashRequestBody(req.body);
 
     const replay = async () => {
@@ -88,7 +107,10 @@ export function createPostRoutes(context: AppContext) {
       return true;
     };
     if (await replay()) return;
+  // #endregion learn:idempotency-key-and-replay
 
+    // 📖 Bài học lesson-06 – kiểm tra media, bài rỗng và alt text trước khi tạo bài (docs/lessons/lesson-06.md)
+    // #region learn:create-post-validate-media
     const request = (req.body ?? {}) as Partial<CreatePostRequest>;
     const body = await validatePostBody(request.body, repository);
     const mediaIds = Array.isArray(request.mediaIds) ? request.mediaIds : [];
@@ -102,6 +124,7 @@ export function createPostRoutes(context: AppContext) {
     const altTexts = Object.entries(isRecord(request.altTexts) ? request.altTexts : {}).flatMap(([mediaId, alt]) =>
       mediaIds.includes(mediaId) && typeof alt === 'string' && alt.trim() ? [[mediaId, alt.trim().slice(0, MAX_ALT_LENGTH)] as const] : [],
     );
+    // #endregion learn:create-post-validate-media
 
     const post: Post = {
       id: FeedRepository.newId('post-user'),
@@ -113,7 +136,13 @@ export function createPostRoutes(context: AppContext) {
       createdAt: new Date().toISOString(),
     };
 
+    // 📖 Bài học shared-foundations §8 – tạo bài và lưu key trong cùng transaction, thua cuộc đua thì phát lại (docs/lessons/shared-foundations.md)
+    // #region learn:create-post-transaction
     try {
+      // Từng bước: (1) mở transaction – chỉ có MỘT kết nối nên các truy vấn bên trong chạy lần lượt;
+      // (2) chèn bài, cập nhật alt, dựng response bằng chính `tx` để đọc được dữ liệu chưa commit;
+      // (3) lưu (viewer, key) → response bằng INSERT: nếu request khác đã lưu trước, khoá chính ném 23505 và cả transaction rollback;
+      // (4) catch bên dưới nhận 23505 rồi phát lại response của request thắng cuộc đua.
       // Tạo bài + lưu key trong CÙNG transaction: hoặc cả hai cùng thành công, hoặc không có gì được ghi.
       const responseBody = await context.db.transaction(async (tx) => {
         await repository.insertPost(tx, post);
@@ -131,6 +160,7 @@ export function createPostRoutes(context: AppContext) {
       if (isUniqueViolation(error) && (await replay())) return;
       throw error;
     }
+    // #endregion learn:create-post-transaction
   });
 
   return router;

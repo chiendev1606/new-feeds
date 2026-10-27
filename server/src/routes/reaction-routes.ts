@@ -18,15 +18,20 @@ export function createReactionRoutes(context: AppContext) {
   const router = Router();
   const { repository } = context;
 
+  // 📖 Bài học lesson-05 – ghi reaction rồi trả số liệu mới kèm confirmedAt làm sự thật (docs/lessons/lesson-05.md)
+  // #region learn:reaction-write-confirmed-at
   /** Tìm bài (404 nếu không có) → ghi → trả về số liệu mới theo người xem. */
   const writeReaction = async (req: Request<{ postId: string }>, write: (postId: string) => Promise<void>): Promise<ReactionResponse> => {
     const post = await repository.getPostById(req.params.postId);
     if (!post) throw new HttpError(404, 'POST_NOT_FOUND', 'Không tìm thấy bài viết');
     await write(post.id);
     const [updated] = await personalizePosts(repository, [post], req.viewerId);
-    return { postId: post.id, engagementSummary: updated!.engagementSummary, viewerReaction: updated!.viewerReaction };
+    return { postId: post.id, engagementSummary: updated!.engagementSummary, viewerReaction: updated!.viewerReaction, confirmedAt: new Date().toISOString() };
   };
+  // #endregion learn:reaction-write-confirmed-at
 
+  // 📖 Bài học lesson-05 – PUT reaction: validate rồi UPSERT (docs/lessons/lesson-05.md)
+  // #region learn:reaction-put-route
   router.put('/posts/:postId/reaction', async (req, res) => {
     const { reaction } = (req.body ?? {}) as Partial<SetReactionRequest>;
     if (!REACTION_TYPES.includes(reaction as ReactionType)) {
@@ -34,6 +39,7 @@ export function createReactionRoutes(context: AppContext) {
     }
     res.json(await writeReaction(req, (postId) => repository.setReaction(postId, req.viewerId, reaction as ReactionType)));
   });
+  // #endregion learn:reaction-put-route
 
   router.delete('/posts/:postId/reaction', async (req, res) => {
     res.json(await writeReaction(req, (postId) => repository.removeReaction(postId, req.viewerId)));
