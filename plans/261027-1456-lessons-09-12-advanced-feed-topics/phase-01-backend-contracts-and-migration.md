@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Backend + hợp đồng API cho 09–12"
-status: pending
+status: completed
 priority: P1
 effort: "3h"
 dependencies: []

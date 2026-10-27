@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Lesson 11: đo lường và telemetry"
-status: pending
+status: completed
 priority: P2
 effort: "2.5h"
 dependencies: [1]

@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Guide độ bao phủ + kiểm chứng tổng"
-status: pending
+status: completed
 priority: P2
 effort: "0.5h"
 dependencies: [2, 3, 4, 5]

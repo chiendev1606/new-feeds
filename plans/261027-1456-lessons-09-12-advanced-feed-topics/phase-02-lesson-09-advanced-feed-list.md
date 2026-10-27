@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Lesson 09: feed list nâng cao"
-status: pending
+status: completed
 priority: P2
 effort: "3h"
 dependencies: [1]

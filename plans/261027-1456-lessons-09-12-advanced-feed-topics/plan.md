@@ -1,7 +1,7 @@
 ---
 title: "Lesson 09–12: feed list nâng cao, lazy-load, telemetry, resilience/offline"
 description: "Thêm 4 lesson phủ nốt các mục còn thiếu của bài News Feed (GreatFrontEnd), kèm bảng đối chiếu độ bao phủ trong learning guide."
-status: pending
+status: completed
 priority: P2
 effort: 15h
 tags: [feature, frontend, backend, api, docs]
@@ -39,24 +39,31 @@ Plan này phủ nốt các mục ❌ và 🟡 trong report `plans/reports/brains
 ## Phases
 | # | Phase | Status | Effort | Phụ thuộc |
 |---|-------|--------|--------|-----------|
-| 1 | [Backend + hợp đồng API cho 09–12](./phase-01-backend-contracts-and-migration.md) | Pending | 3h | — |
-| 2 | [Lesson 09: feed list nâng cao](./phase-02-lesson-09-advanced-feed-list.md) | Pending | 3h | 1 |
-| 3 | [Lesson 10: lazy-load code, JS tiers, composer entity](./phase-03-lesson-10-lazy-loading-and-composer-entities.md) | Pending | 3h | 1 |
-| 4 | [Lesson 11: đo lường và telemetry](./phase-04-lesson-11-metrics-and-telemetry.md) | Pending | 2.5h | 1 |
-| 5 | [Lesson 12: resilience và offline](./phase-05-lesson-12-resilience-and-offline.md) | Pending | 3h | 1 |
-| 6 | [Guide độ bao phủ + kiểm chứng tổng](./phase-06-coverage-guide-and-verification.md) | Pending | 0.5h | 2, 3, 4, 5 |
+| 1 | [Backend + hợp đồng API cho 09–12](./phase-01-backend-contracts-and-migration.md) | Completed | 3h | — |
+| 2 | [Lesson 09: feed list nâng cao](./phase-02-lesson-09-advanced-feed-list.md) | Completed | 3h | 1 |
+| 3 | [Lesson 10: lazy-load code, JS tiers, composer entity](./phase-03-lesson-10-lazy-loading-and-composer-entities.md) | Completed | 3h | 1 |
+| 4 | [Lesson 11: đo lường và telemetry](./phase-04-lesson-11-metrics-and-telemetry.md) | Completed | 2.5h | 1 |
+| 5 | [Lesson 12: resilience và offline](./phase-05-lesson-12-resilience-and-offline.md) | Completed | 3h | 1 |
+| 6 | [Guide độ bao phủ + kiểm chứng tổng](./phase-06-coverage-guide-and-verification.md) | Completed | 0.5h | 2, 3, 4, 5 |
+
+**Thực thi:** phase 1 đã làm luôn các phần dùng chung để các phase sau khỏi sửa đè lên nhau:
+- `http-client.ts`: gộp GET trùng; làm mới session một lần khi gặp 401; `httpClientEvents`.
+- `format-reactor-list.ts` và dòng hiển thị trong `feed-post-article.tsx`.
+- Registry kèm component tạm cho 4 lesson.
+
+Phase 2–5 chạy song song trên cùng working tree, mỗi phase chỉ sửa các file của mình. CSS của mỗi lesson nằm trong file riêng.
 
 Phase 2–5 độc lập với nhau, chỉ phụ thuộc phase 1. Chúng có chạm chung vài file (`lesson-registry.ts`, `feed-post-article.tsx`, `http-client.ts`), nên nếu chạy song song thì mỗi phase chỉ được sửa đúng những phần đã ghi trong file phase của nó.
 
 ## Tiêu chí hoàn thành
-- [ ] `npm run typecheck`, `npm run test` và `npm run build` đều pass. Có test mới cho: gộp request trùng, tính anchor khi scroll, parser entity, bộ đếm lượt hiển thị, outbox, làm mới token khi gặp 401, và API telemetry.
-- [ ] Smoke test trên Chrome thật (CDP), không lỗi console, cho từng lesson:
+- [x] `npm run typecheck`, `npm run test` và `npm run build` đều pass. Có test mới cho: gộp request trùng, tính anchor khi scroll, parser entity, bộ đếm lượt hiển thị, outbox, làm mới token khi gặp 401, và API telemetry.
+- [x] Smoke test trên Chrome thật (CDP), không lỗi console, cho từng lesson:
   - 09: mở chi tiết bài rồi quay lại thì về đúng bài đang đọc (lệch không quá 5px). Hai tab đồng bộ reaction trong vòng 1 giây. Hai component cùng đọc một bài chỉ tạo 1 request.
   - 10: chunk của reaction menu chỉ tải khi hover. Bài đăng có #tag hoặc @mention được server lưu thành entity.
   - 11: terminal backend in các lô lượt hiển thị; bảng `telemetry_events` có dữ liệu; panel hiện số đo LCP/CLS/INP.
   - 12: bật offline rồi đăng bài thì bài vào outbox; có mạng lại thì gửi đúng một lần (DB có đúng 1 bài). Hết hạn session thì 1 lần refresh, request vẫn thành công. Khi Service Worker đang bật và offline, feed vẫn hiện dữ liệu đã cache.
-- [ ] Lesson 01–08 không bị ảnh hưởng: chạy lại các script CDP cũ vẫn đạt.
-- [ ] `docs/learning-guide.md` có bảng liệt kê **mọi** mục trong bài, mỗi mục ghi lesson/file hoặc "chỉ lý thuyết".
+- [x] Lesson 01–08 không bị ảnh hưởng: chạy lại các script CDP cũ vẫn đạt.
+- [x] `docs/learning-guide.md` có bảng liệt kê **mọi** mục trong bài, mỗi mục ghi lesson/file hoặc "chỉ lý thuyết".
 
 ## Rủi ro
 | Rủi ro | Giảm thiểu |
@@ -68,3 +75,18 @@ Phase 2–5 độc lập với nhau, chỉ phụ thuộc phase 1. Chúng có ch�
 | 4 lesson cùng sửa `feed-post-article.tsx` | Phase 3 sở hữu phần reaction menu và hover card; phase 4 chỉ thêm dòng `ListFormat`. Không phase nào sửa phần của phase khác |
 
 <!-- slug: lessons-09-12-advanced-feed-topics -->
+
+## Ghi chú hoàn thành (2026-10-27)
+- **Code:** 4 lesson do 4 agent làm song song trên cùng working tree, mỗi agent chỉ sửa file của mình; phase 1 làm trước các phần dùng chung.
+- **Review** (`reports/code-review-lessons-09-12.md`): 0 critical, 2 high, 8 medium, 9 low. Đã sửa hết, chi tiết ở `reports/fix-review-findings.md`.
+  - H1: người dùng chọn Service Worker network-first, cache tách theo viewer.
+  - H2: server chỉ bắt NFC khi bài có entity; lesson 06 tự chuẩn hoá trước khi gửi.
+- **Lỗi thật lộ ra khi kiểm trên trình duyệt** (đã sửa):
+  - `sendTelemetry` nuốt lỗi HTTP.
+  - Outbox lesson 12 không mở được khi offline sau "Tải lại feed", vì `/api/session/me` lỗi. Đã sửa bằng cách nhớ viewer gần nhất.
+- **Kiểm chứng** (typecheck, 213 test, bản production, CDP trên Chrome; tiêu chí đạt):
+  - 09: neo vị trí lệch 0px; gộp request còn 1/6 lần gọi; Page Down chuyển focus đúng; đồng bộ tab 153ms; banner feed cũ hiện đúng.
+  - 10: chunk menu chỉ tải khi chuột vào thanh reaction; bài đăng lưu 2 entity; paste HTML chỉ còn chữ.
+  - 11: tính lượt hiển thị khi cuộn; INP 304ms và long task 300ms; telemetry lưu DB.
+  - 12: offline thì DB có đúng 1 bài; làm mới session 1 lần; bài bị xoá biến khỏi feed kèm toast; Service Worker offline (giả lập offline cho cả target SW) trả cache có header và banner.
+- **Bài học về cách test:** lệnh giả lập offline của CDP chỉ áp cho trang. Request do Service Worker tự gửi vẫn ra mạng thật, nên phải giả lập offline cho cả target SW.

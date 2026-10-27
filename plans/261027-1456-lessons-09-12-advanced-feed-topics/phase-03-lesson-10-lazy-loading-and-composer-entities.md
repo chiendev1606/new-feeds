@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Lesson 10: lazy-load code, JS tiers, composer entity"
-status: pending
+status: completed
 priority: P2
 effort: "3h"
 dependencies: [1]
