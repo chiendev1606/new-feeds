@@ -1,0 +1,43 @@
+/* Học liệu (tab "Bài học"). Dùng token màu của global.css; tự đảo theo dark mode. */
+.learn-layout { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+@media (max-width: 900px) { .learn-layout { grid-template-columns: minmax(0, 1fr); } }
+.learn-toc { position: sticky; top: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; font-size: 0.85rem; }
+.learn-toc ol { padding-inline-start: 1.1rem; margin-block: 0.5rem 0; }
+.learn-toc li { margin-block-end: 0.3rem; }
+.learn-article { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.5rem; line-height: 1.65; max-width: 860px; }
+.learn-markdown h1 { font-size: 1.6rem; }
+.learn-markdown h2 { font-size: 1.3rem; border-block-start: 1px solid var(--border); padding-block-start: 1.25rem; margin-block-start: 2rem; scroll-margin-top: 1rem; }
+.learn-markdown h3 { font-size: 1.05rem; margin-block: 1.25rem 0.5rem; color: var(--accent); }
+.learn-markdown table { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin-block: 0.75rem; display: block; overflow-x: auto; }
+.learn-markdown th, .learn-markdown td { border: 1px solid var(--border); padding: 0.35rem 0.6rem; text-align: start; vertical-align: top; }
+.learn-markdown th { background: var(--accent-soft); }
+.learn-markdown blockquote { margin: 0.75rem 0; padding: 0.5rem 1rem; border-inline-start: 4px solid var(--accent); background: var(--accent-soft); border-radius: 0 6px 6px 0; }
+.learn-markdown pre:not(.learn-code__body) { background: var(--bg); padding: 0.75rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; }
+
+.learn-code { margin: 0.75rem 0 1rem; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.learn-code__header { display: flex; justify-content: space-between; gap: 0.5rem; align-items: center; flex-wrap: wrap; padding: 0.35rem 0.75rem; background: var(--accent-soft); font-size: 0.8rem; }
+.learn-code__header code { background: transparent; padding: 0; }
+.learn-code__actions { display: flex; gap: 0.5rem; align-items: center; }
+.learn-code__actions button { min-height: 24px; padding-block: 0; font-size: 0.75rem; }
+.learn-code__body { margin: 0; padding: 0.75rem 0; overflow-x: auto; font-size: 0.82rem; line-height: 1.55; background: var(--bg); }
+.learn-code__body code { display: block; background: transparent; padding: 0; white-space: pre; }
+
+.learn-diagram { margin: 1rem 0; padding: 0.75rem; background: var(--bg); border-radius: 8px; overflow-x: auto; text-align: center; }
+.learn-diagram svg { max-width: 100%; height: auto; }
+
+/* Màu cú pháp highlight.js – tối giản, dùng chung sáng/tối. */
+.hljs-keyword, .hljs-built_in, .hljs-type { color: #8250df; }
+.hljs-string, .hljs-regexp { color: #0a7d32; }
+.hljs-number, .hljs-literal { color: #b35900; }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.hljs-title, .hljs-title.function_ { color: #0550ae; }
+.hljs-attr, .hljs-property, .hljs-variable { color: #953800; }
+@media (prefers-color-scheme: dark) {
+  .hljs-keyword, .hljs-built_in, .hljs-type { color: #d2a8ff; }
+  .hljs-string, .hljs-regexp { color: #7ee787; }
+  .hljs-number, .hljs-literal { color: #ffa657; }
+  .hljs-title, .hljs-title.function_ { color: #79c0ff; }
+  .hljs-attr, .hljs-property, .hljs-variable { color: #ffa657; }
+}
+.learn-toc__switch { display: block; width: 100%; margin-block-end: 0.6rem; padding: 0.35rem 0.5rem; font: inherit; text-align: start; background: transparent; color: var(--accent); border: 1px dashed var(--border); border-radius: var(--radius); cursor: pointer; }
+.learn-toc__switch:hover, .learn-toc__switch:focus-visible { background: var(--accent-soft); }
